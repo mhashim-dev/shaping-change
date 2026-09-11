@@ -1,0 +1,19 @@
+{
+  "name": "tree-growth",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "build:poc": "node scripts/build-poc.cjs",
+    "test:content": "node --no-warnings scripts/validate-content.mjs",
+    "test": "node --no-warnings scripts/validate-content.mjs",
+    "i18n:template": "node --no-warnings scripts/gen-i18n-template.mjs"
+  },
+  "dependencies": {
+    "next": "^14.2.35",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  }
+}

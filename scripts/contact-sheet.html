@@ -1,0 +1,41 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<!-- Contact sheet of all 22 screen designs. Serve the project root over HTTP and load
+     /scripts/contact-sheet.html, then capture with scripts/shot-full.mjs. -->
+<style>
+  * { margin: 0; box-sizing: border-box; }
+  body { width: 2400px; background: #15100a; font-family: Helvetica, Arial, sans-serif; padding: 46px 44px 52px; }
+  h1 { color: #f0c66a; font-family: Georgia, serif; font-style: italic; font-size: 40px; font-weight: 700; margin-bottom: 6px; }
+  .sub { color: #cfc7b8; font-size: 18px; margin-bottom: 30px; }
+  .grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 18px; }
+  .cell { background: #0e0a06; border: 1px solid #4a3e2a; border-radius: 9px; overflow: hidden; }
+  .cell img { width: 100%; display: block; aspect-ratio: 16 / 9; object-fit: cover; }
+  .cap { color: #ece5d5; font-size: 14px; padding: 8px 10px 9px; display: flex; gap: 8px; align-items: baseline; line-height: 1.25; }
+  .cap b { color: #f0c66a; font-size: 13px; font-weight: 700; }
+</style></head><body>
+<h1>Shaping Change — Screen Designs</h1>
+<div class="sub">22 screens · produced from the Edu / PVAW–approved blueprint</div>
+<div class="grid" id="g"></div>
+<script>
+const S = [
+  ["01-intro","Intro — meet Orion"], ["02-pressure-money","Money pressure"],
+  ["03-pressure-role","A changing role"], ["04-pressures-explained","Two big pressures"],
+  ["05-behaviour","Behaviour under pressure"], ["06-impact","Impact on the family"],
+  ["07-belief","The belief underneath"], ["08-root-tree-model","The whole-tree model"],
+  ["09-rebuild-intro","Now, help him rebuild"], ["10-attitude","A healthier belief"],
+  ["11-behaviour-good","A leader's action"], ["12-impact-good","The family feels it"],
+  ["13-outcome-healthy","Healthy — bearing fruit"], ["14-outcome-mixed","Healing"],
+  ["15-outcome-damaged","Under strain"], ["16-insist-1","He digs in"],
+  ["17-insist-2","It gets heavier"], ["18-escalation-warning","Where this can lead"],
+  ["19-takeaways","Takeaways"], ["20-why-matters","Why this matters"],
+  ["21-leadership","Your leadership pledge"], ["22-support","Support & next steps"],
+];
+const g = document.getElementById('g');
+S.forEach(([f, c]) => {
+  const d = document.createElement('div'); d.className = 'cell';
+  d.innerHTML = '<img src="/docs/figma-screens/' + f + '.png" alt="">' +
+    '<div class="cap"><b>' + f.slice(0, 2) + '</b><span>' + c + '</span></div>';
+  g.appendChild(d);
+});
+document.title = 'CONTACT-READY';
+</script>
+</body></html>

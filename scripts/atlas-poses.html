@@ -1,0 +1,26 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<style>body{margin:0}</style></head><body>
+<canvas id="c" width="1420" height="1160"></canvas>
+<script type="module">
+import { drawAtlasPose, drawAtlasWalker } from '/lib/tree-engine.js';
+const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+ctx.fillStyle = '#6cbf47'; ctx.fillRect(0, 0, 1420, 1160);
+const S = 1.32;
+// row 1 — turnaround
+const r1y = 400;
+[['front',150],['threeq',430],['profile',710],['backthreeq',990],['back',1270]]
+  .forEach(([p,x]) => drawAtlasPose(ctx, x, r1y, S, { pose: p, expr: 'neutral' }));
+// row 2 — expressions (busts)
+const r2y = 700;
+[['neutral',110],['talk',310],['surprised',510],['sad',710],['angry',910],['wink',1110],['joy',1310]]
+  .forEach(([e,x]) => drawAtlasPose(ctx, x, r2y, 1.15, { pose: 'bust', expr: e }));
+// row 3 — actions
+const r3y = 1080;
+drawAtlasWalker(ctx, 140, r3y, 1.15, 0.25);           // walk, contact pose (upright)
+drawAtlasPose(ctx, 400, r3y, 1.15, { pose: 'run', t: 40 });
+drawAtlasPose(ctx, 660, r3y, 1.15, { pose: 'wave', expr: 'talk', t: 130 });
+drawAtlasPose(ctx, 900, r3y, 1.15, { pose: 'point', expr: 'neutral' });
+drawAtlasPose(ctx, 1140, r3y, 1.15, { pose: 'think' });
+drawAtlasPose(ctx, 1330, r3y, 1.15, { pose: 'sit', expr: 'neutral' });
+document.title = 'POSES-READY';
+</script></body></html>

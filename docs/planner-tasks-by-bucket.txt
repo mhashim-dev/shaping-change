@@ -1,0 +1,35 @@
+=== Bucket: Initiation & Sign-off ===
+Confirm scope, roles & the single review
+Confirm AMES technical prerequisites
+Set up the Planner plan & link docs
+
+=== Bucket: Content Intake & Build ===
+Receive finalised game content document (Edu team)
+Build the game visuals & world
+Build the game flow & interface
+Wire in the finalised content & the three outcomes
+Pedagogy guardrail check (with PVAW)
+Accessibility (WCAG 2.1 AA) & internal build QA
+
+=== Bucket: Security & Integration ===
+Provision hosting & apply security headers/CSP
+Embed in the Drupal page & run security scans
+IT/Security review & sign-off
+
+=== Bucket: QA ===
+QA - functional, cross-browser/device & accessibility
+Fix issues found in QA
+
+=== Bucket: Stakeholder Review & Sign-off ===
+Stakeholder review & sign-off (Edu + PVAW)
+Address review feedback
+
+=== Bucket: Launch & Handover ===
+Go-live readiness review
+Publish, announce & smoke test
+Monitor, support & documentation handover
+
+=== Bucket: Analytics & Privacy ===
+Set up analytics & events (GA4) + data-minimisation
+GA4 property, consent, privacy notice & verify
+

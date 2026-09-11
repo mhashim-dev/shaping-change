@@ -1,0 +1,21 @@
+# dependencies (recreated by `npm install`)
+/node_modules
+
+# Next.js build output (recreated by `npm run build` / `npm run dev`)
+/.next/
+/out/
+
+# Vercel CLI local project link (not needed once deploys go through GitHub)
+/.vercel
+
+# macOS
+.DS_Store
+
+# historical local snapshots from earlier work sessions — superseded by git history now,
+# and too bulky to carry in every clone. Left on disk, just not tracked.
+/backups/
+/.backup-linear/
+
+# logs
+*.log
+npm-debug.log*

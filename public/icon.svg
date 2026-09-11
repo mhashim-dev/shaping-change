@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Shaping Change">
+  <rect width="512" height="512" rx="112" fill="#17110a"/>
+  <circle cx="256" cy="230" r="150" fill="#2f5d3a"/>
+  <circle cx="176" cy="210" r="86" fill="#3c7a4a"/>
+  <circle cx="336" cy="210" r="86" fill="#3c7a4a"/>
+  <circle cx="256" cy="150" r="80" fill="#4f9a5f"/>
+  <circle cx="300" cy="196" r="18" fill="#e4574c"/>
+  <circle cx="205" cy="176" r="16" fill="#e4574c"/>
+  <rect x="242" y="250" width="28" height="150" rx="10" fill="#7c5d40"/>
+  <path d="M256 300 L212 356 M256 320 L306 372" stroke="#7c5d40" stroke-width="18" stroke-linecap="round" fill="none"/>
+  <rect x="120" y="398" width="272" height="26" rx="13" fill="#52341c"/>
+</svg>

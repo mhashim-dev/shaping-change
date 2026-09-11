@@ -1,0 +1,46 @@
+%% Power, Pressure & Choice — branching user-journey diagram
+%% Render: VS Code Mermaid preview, https://mermaid.live, or
+%%   npx -y @mermaid-js/mermaid-cli -i docs/journey-diagram.mmd -o docs/journey-diagram.svg
+flowchart TD
+    intro([Welcome / Begin]) --> roots
+    roots["<b>Roots</b> · pick a pressure<br/><i>neutral — no wrong answer</i>"] --> soil
+
+    soil{"<b>Soil</b> · which belief?"}
+    soil -->|"share the load ✓ (healthy)"| trunk
+    soil -->|"control / image / help=weakness (harmful)"| trunk
+
+    trunk{"<b>Trunk</b> · response to pressure"}
+    trunk -->|"pause before acting ✓ (healthy)"| impact
+    trunk -->|"control money / withdraw / anger (harmful)"| impact
+
+    impact["<b>Branches</b> · who feels it<br/><i>neutral — witnessing, not failing</i>"] --> pivot
+
+    pivot{"<b>Turning point</b> · his stance"}
+    pivot -->|"Own it ✓ (healthy)"| self
+    pivot -->|"Defend it (harmful)"| reckon
+    pivot -->|"Shut down (harmful)"| reckon
+
+    reckon{"<b>Door still open</b><br/>the tree is failing"}
+    reckon -->|"Stop & own it ✓ (healthy)"| self
+    reckon -->|"Keep insisting (harmful)"| end_withered
+
+    self{"<b>Self</b> · seek support ✓ vs push through alone"} --> family
+    family{"<b>Family</b> · share power ✓ vs quietly control"} --> community
+    community{"<b>Community</b> · lead ✓ vs keep private"} --> commit
+
+    commit[/"<b>Commitment</b> · write one leadership action"/] --> resolve{{"resolve ending<br/>by path + health"}}
+    resolve -->|"no harm on path & high health"| end_flourishing
+    resolve -->|"harm happened, then repaired"| end_recovering
+
+    end_flourishing([" Flourishing<br/>full colour, golden light "]):::good
+    end_recovering([" Recovering<br/>partly recoloured, some bare twigs "]):::mid
+    end_withered([" Withered<br/>bare — a warning, not a verdict "]):::bad
+
+    end_withered -. "go back & choose again" .-> pivot
+    end_withered -. "start over" .-> intro
+    end_flourishing -. "plant another tree" .-> intro
+    end_recovering -. "plant another tree" .-> intro
+
+    classDef good fill:#dff0c6,stroke:#6f9c2f,color:#243a07;
+    classDef mid fill:#e9f2d6,stroke:#9bb36a,color:#33420f;
+    classDef bad fill:#d9dde0,stroke:#8a949a,color:#2c3338;

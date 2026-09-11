@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<style>html,body{margin:0;background:#0c0905}</style></head>
+<body>
+<canvas id="c" width="1560" height="600"></canvas>
+<script>
+const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+const TAU = Math.PI * 2;
+const lerp = (a,b,t)=>a+(b-a)*t;
+const clamp = (v,a,b)=>v<a?a:v>b?b:v;
+function hex2rgb(h){h=h.replace('#','');return [parseInt(h.substr(0,2),16),parseInt(h.substr(2,2),16),parseInt(h.substr(4,2),16)];}
+function mixHex(a,b,t){var x=hex2rgb(a),y=hex2rgb(b);return 'rgb('+Math.round(lerp(x[0],y[0],t))+','+Math.round(lerp(x[1],y[1],t))+','+Math.round(lerp(x[2],y[2],t))+')';}
+function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();ctx.fill();}
+function cloud(x,y,r){ctx.beginPath();ctx.arc(x-r*0.7,y,r*0.6,0,TAU);ctx.arc(x,y-r*0.25,r*0.8,0,TAU);ctx.arc(x+r*0.75,y,r*0.6,0,TAU);ctx.rect(x-r*0.9,y,r*1.8,r*0.7);ctx.fill();}
+
+// Orion — a simple flat figure whose emotion is driven by mood (0 = stressed, 1 = calm)
+function drawAlpha(cx, gy, s, m){
+  const slump = 1 - m;
+  const skin = '#b97a4e', skinD = '#9c6238', dark = '#2b2018';
+  const shirt = mixHex('#5f6b74', '#4e8a6b', m);      // slate-grey (stressed) → warm green (calm)
+  const shirtD = mixHex('#4d5760', '#3f7358', m);
+  const trouser = '#3b3640';
+
+  const headR = 30*s;
+  const headCy = gy - 196*s + slump*16*s;             // sinks a little when slumped
+  const neckY  = headCy + headR - 2*s;
+  const shoulderY = neckY + 14*s;
+  const hipY   = gy - 92*s;
+
+  // ground shadow
+  ctx.fillStyle = 'rgba(40,30,20,0.16)';
+  ctx.beginPath(); ctx.ellipse(cx, gy+4*s, 58*s, 12*s, 0,0,TAU); ctx.fill();
+
+  // legs + feet
+  ctx.fillStyle = trouser;
+  rr(cx-22*s, hipY, 17*s, gy-hipY-4*s, 7*s);
+  rr(cx+5*s,  hipY, 17*s, gy-hipY-4*s, 7*s);
+  ctx.fillStyle = dark;
+  rr(cx-27*s, gy-9*s, 25*s, 11*s, 5*s);
+  rr(cx+2*s,  gy-9*s, 25*s, 11*s, 5*s);
+
+  // torso (shirt)
+  const sw = 44*s, hw = 30*s;
+  ctx.fillStyle = shirt;
+  ctx.beginPath();
+  ctx.moveTo(cx-sw, shoulderY+6*s);
+  ctx.quadraticCurveTo(cx-sw-4*s, (shoulderY+hipY)/2, cx-hw, hipY+8*s);
+  ctx.quadraticCurveTo(cx, hipY+18*s, cx+hw, hipY+8*s);
+  ctx.quadraticCurveTo(cx+sw+4*s, (shoulderY+hipY)/2, cx+sw, shoulderY+6*s);
+  ctx.quadraticCurveTo(cx, shoulderY-10*s, cx-sw, shoulderY+6*s);
+  ctx.closePath(); ctx.fill();
+
+  // arms (held closer to the body when stressed)
+  const spread = lerp(1*s, 8*s, m);
+  ctx.strokeStyle = shirtD; ctx.lineCap = 'round'; ctx.lineWidth = 15*s;
+  ctx.beginPath(); ctx.moveTo(cx-sw+7*s, shoulderY+12*s); ctx.lineTo(cx-sw+3*s-spread, hipY+4*s); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx+sw-7*s, shoulderY+12*s); ctx.lineTo(cx+sw-3*s+spread, hipY+4*s); ctx.stroke();
+  ctx.fillStyle = skin;
+  ctx.beginPath(); ctx.arc(cx-sw+3*s-spread, hipY+8*s, 7*s,0,TAU); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx+sw-3*s+spread, hipY+8*s, 7*s,0,TAU); ctx.fill();
+
+  // neck (matches face — no collar band)
+  ctx.fillStyle = skin;
+  rr(cx-8*s, neckY-6*s, 16*s, 20*s, 5*s);
+
+  // head (tilts forward when stressed)
+  ctx.save();
+  ctx.translate(cx, headCy);
+  ctx.rotate(lerp(0.13, -0.02, m));
+  ctx.fillStyle = skin;
+  ctx.beginPath(); ctx.arc(-headR+3*s, 3*s, 6*s,0,TAU); ctx.arc(headR-3*s, 3*s, 6*s,0,TAU); ctx.fill(); // ears
+  ctx.beginPath(); ctx.arc(0,0, headR, 0, TAU); ctx.fill();                                              // face
+  // hair (top cap) — clean-shaven, no beard
+  ctx.fillStyle = dark;
+  ctx.beginPath();
+  ctx.moveTo(-headR+2*s, 0);
+  ctx.quadraticCurveTo(-headR-1*s, -headR-6*s, 0, -headR-4*s);
+  ctx.quadraticCurveTo(headR+1*s, -headR-6*s, headR-2*s, 0);
+  ctx.quadraticCurveTo(headR-6*s, -headR+5*s, 0, -headR+6*s);
+  ctx.quadraticCurveTo(-(headR-6*s), -headR+5*s, -headR+2*s, 0);
+  ctx.closePath(); ctx.fill();
+  // brows — inner ends drop when stressed
+  // expression: calm/smiling (high) → sad (mid) → angry/tense (very low)
+  const calm = clamp((m-0.45)/0.3, 0, 1);
+  const angry = clamp((0.32-m)/0.22, 0, 1);
+  const sad = clamp(1-calm-angry, 0, 1);
+  const innerY = (-4*sad + 5*angry)*s;
+  ctx.strokeStyle = dark; ctx.lineWidth = 3.4*s; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(-16*s, -8*s); ctx.lineTo(-5*s, -7*s + innerY); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo( 16*s, -8*s); ctx.lineTo( 5*s, -7*s + innerY); ctx.stroke();
+  // eyes (cast a touch lower when sad)
+  ctx.fillStyle = dark;
+  const eyeY = (2 + 1.6*sad)*s;
+  ctx.beginPath(); ctx.arc(-10*s, eyeY, 3*s,0,TAU); ctx.arc(10*s, eyeY, 3*s,0,TAU); ctx.fill();
+  // mouth — smile → frown → tight
+  ctx.strokeStyle = dark; ctx.lineWidth = 3.2*s;
+  const mc = (5*calm - 6*sad - 3*angry)*s;
+  ctx.beginPath(); ctx.moveTo(-9*s, 15*s); ctx.quadraticCurveTo(0, 15*s+mc, 9*s, 15*s); ctx.stroke();
+  ctx.restore();
+
+  // mood aura above the head — a cloud (with a spark when very low) or a warm glow
+  const ax = cx, ay = headCy - headR - 40*s;
+  if (m < 0.55){
+    const ca = (0.55-m)/0.55;
+    ctx.fillStyle = 'rgba(122,124,134,'+(0.32+0.42*ca).toFixed(2)+')';
+    cloud(ax, ay, 24*s);
+    if (m < 0.22){
+      ctx.strokeStyle = 'rgba(240,206,86,0.95)'; ctx.lineWidth = 2.6*s; ctx.lineCap='round'; ctx.lineJoin='round';
+      ctx.beginPath(); ctx.moveTo(ax+1*s, ay+12*s); ctx.lineTo(ax-5*s, ay+22*s); ctx.lineTo(ax+2*s, ay+22*s); ctx.lineTo(ax-4*s, ay+33*s); ctx.stroke();
+    }
+  } else {
+    const g = ctx.createRadialGradient(ax, ay+8*s, 2*s, ax, ay+8*s, 38*s);
+    g.addColorStop(0, 'rgba(255,214,120,'+(0.55*(m-0.55)/0.45).toFixed(2)+')');
+    g.addColorStop(1, 'rgba(255,214,120,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(ax, ay+8*s, 38*s,0,TAU); ctx.fill();
+  }
+}
+
+// ---- scene ----
+const W = cv.width, H = cv.height;
+const bg = ctx.createLinearGradient(0,0,0,H);
+bg.addColorStop(0,'#dfeaf3'); bg.addColorStop(0.7,'#eef2ec'); bg.addColorStop(1,'#e3ddcf');
+ctx.fillStyle = bg; ctx.fillRect(0,0,W,H);
+// ground band
+ctx.fillStyle = '#d8cdb6'; ctx.fillRect(0, 476, W, H-476);
+
+ctx.fillStyle = '#2a1f10';
+ctx.font = 'italic 600 30px Georgia, serif';
+ctx.textAlign = 'center';
+ctx.fillText('Orion — his emotional state (procedural, drawn in the browser — no image files)', W/2, 46);
+
+const states = [
+  { m: 0.90, label: 'Hopeful — arrival' },
+  { m: 0.48, label: 'Under pressure' },
+  { m: 0.12, label: 'Controlling & tense' },
+  { m: 0.72, label: 'Rebuilding — calmer' },
+];
+const gy = 466, s = 1.15;
+states.forEach((st, i) => {
+  const cx = W*(i+0.5)/states.length;
+  drawAlpha(cx, gy, s, st.m);
+  ctx.fillStyle = '#4a4034';
+  ctx.font = '600 20px Helvetica, Arial, sans-serif';
+  ctx.fillText(st.label, cx, 524);
+});
+
+document.title = 'ALPHA-READY';
+</script>
+</body></html>

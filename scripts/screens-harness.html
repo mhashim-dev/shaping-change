@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="/app/globals.css">
+<style>
+  html, body { height: auto; overflow: visible; background: #0c0905; }
+  .block { position: relative; width: 1600px; height: 900px; overflow: hidden; background: #17110a; }
+  .block canvas { position: absolute; left: 0; top: 0; width: 1600px; height: 900px; display: block; }
+  .block .panel { position: absolute; right: 16px; top: 220px; max-height: none; }  /* never clip: the panel no longer scrolls */
+  /* the first-time coach nudge is a fixed overlay live; anchor it inside the block for the still */
+  .block .gcoach { position: absolute; left: 40px; bottom: 120px; top: auto; right: auto; animation: none; }
+  /* welcome/landing screen: centred card OVER the full scene (canvas stays visible) */
+  .block.landing .panel { position: absolute; left: 50%; top: 50%; right: auto; transform: translate(-50%, -50%); width: 780px; max-height: none; }
+</style>
+</head>
+<body>
+<script type="module">
+import { createTreeEngine } from '/lib/tree-engine.js';
+import { STEPS, PHASE_ORDER, SUPPORT_LINE, KEY_MESSAGES, LEGEND } from '/lib/game-content.js';
+
+const BY_ID = {}; STEPS.forEach(s => BY_ID[s.id] = s);
+const SEED = 1357911;
+const FACES = ['😟', '🙁', '😐', '🙂', '😃'];
+// the optional readiness self-check (mirrors the live before/after reflection)
+const reflectFacesHTML = () => '<div class="greflect-row">' +
+  FACES.map(f => '<button type="button" class="greflect-face">' + f + '</button>').join('') +
+  '<button type="button" class="greflect-skip">Prefer not to say</button></div>';
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+const escText = (s) => esc(s).replace(/\n/g, '<br>');
+
+// build the floating panel HTML for a screen (static mock — no handlers)
+function panelHTML(id, o) {
+  o = o || {};
+  const cur = BY_ID[id];
+  const phaseIndex = PHASE_ORDER.indexOf(cur.phase);
+  const isEnding = cur.type === 'ending';
+  const stepLabel = cur.type === 'intro' ? 'Welcome'
+    : isEnding ? 'Complete'
+    : phaseIndex >= 0 ? 'Step ' + (phaseIndex + 1) + ' of ' + PHASE_ORDER.length : '';
+  const dots = PHASE_ORDER.map((p, i) => {
+    const cls = (isEnding || i < phaseIndex) ? 'on' : (i === phaseIndex ? 'now' : '');
+    return '<span class="' + cls + '"></span>';
+  }).join('');
+  let h = '<div class="panel-top"><div class="gstep">' + esc(stepLabel) + '</div>' +
+    '<div class="gdots">' + dots + '</div>' +
+    '<div class="panel-top-right"><button class="gsound" type="button">🔊</button>' +
+    '<button class="grestart" type="button">Start over</button></div></div>';
+
+  if (cur.type === 'intro') {
+    h += '<div><h1 class="gtitle">' + esc(cur.prompt) + '</h1>' +
+      '<p class="ghint" style="margin-bottom:10px">' + escText(cur.hint) + '</p>' +
+      '<div class="panel-foot"><span></span><button class="grow" type="button">' + esc(cur.btn) + '</button></div></div>';
+  } else if (cur.type === 'story') {
+    const legend2 = cur.showLegend
+      ? (cur.explore ? '<p class="gexplore">Tap each part of the tree to explore it — 4 of 4 found</p>' : '') +
+        '<div class="glegend">' + LEGEND.map(l => '<button type="button"><i style="background:' + esc(l.color) + '"></i>' + esc(l.label) + '</button>').join('') + '</div>'
+      : '';
+    const altBtn = cur.altNext ? '<button class="gback" type="button">' + esc(cur.altBtn) + '</button>' : '';
+    // "Show the numbers" statistics — shown revealed in the mock so reviewers see the cited content
+    const revealBlock = cur.reveal ? '<p class="ghint" style="margin-top:2px">' + escText(cur.reveal.text) + '</p>' : '';
+    h += '<div><p class="gtag">' + esc(cur.tag) + '</p><h1 class="gq">' + esc(cur.prompt) + '</h1>' +
+      '<p class="ghint">' + escText(cur.hint) + '</p>' + revealBlock + legend2 +
+      '<div class="panel-foot"><button class="gback" type="button" style="visibility:' + ((o.trailLen || 1) > 1 ? 'visible' : 'hidden') + '">&#8592; Previous step</button>' +
+      '<div style="display:flex;gap:10px;align-items:center">' + altBtn + '<button class="grow" type="button">' + esc(cur.btn) + '</button></div></div></div>';
+  } else if (cur.type === 'pick') {
+    const pills = cur.options.map((opt, i) =>
+      '<button type="button" class="pill' + (o.picked === i ? ' sel' : '') + '">' + esc(opt.label) + '</button>').join('');
+    const info = (typeof o.picked === 'number') ? cur.options[o.picked].info : ' ';
+    h += '<div><p class="gtag">' + esc(cur.tag) + '</p><h1 class="gq">' + esc(cur.prompt) + '</h1>' +
+      '<p class="ghint">' + esc(cur.hint) + '</p>' +
+      (cur.drop ? '<p class="gexplore">Drag a card onto the ' + (cur.drop === 'soil' ? 'soil' : 'trunk') + ' — or just tap to choose.</p>' : '') +
+      '<div class="gpills">' + pills + '</div>' +
+      '<p class="ginfo">' + esc(info) + '</p>' +
+      '<div class="panel-foot"><button class="gback" type="button" style="visibility:' + ((o.trailLen || 1) > 1 ? 'visible' : 'hidden') + '">&#8592; Previous step</button>' +
+      '<button class="grow" type="button">' + esc(cur.btn) + '</button></div></div>';
+  } else if (cur.type === 'commit') {
+    const chips = (cur.suggestions || []).map(s => '<button type="button" class="chip">' + esc(s) + '</button>').join('');
+    h += '<div><p class="gtag">' + esc(cur.tag) + '</p><h1 class="gq">' + esc(cur.prompt) + '</h1>' +
+      '<p class="ghint">' + esc(cur.hint) + '</p>' +
+      '<textarea class="gcommit" rows="2">' + esc(o.commitment || '') + '</textarea>' +
+      '<div class="gchips">' + chips + '</div>' +
+      '<div class="panel-foot"><button class="gback" type="button">&#8592; Previous step</button>' +
+      '<button class="grow" type="button">' + esc(cur.btn) + '</button></div></div>';
+  } else if (isEnding) {
+    const recap = (o.answers || []).filter(a => a && a.label).map(a => esc(a.label));
+    const keys = KEY_MESSAGES.map(m => '<div><i></i>' + esc(m) + '</div>').join('');
+    let actions = cur.options.map(opt => '<button type="button" class="grow">' + esc(opt.label) + '</button>').join('');
+    actions += '<button type="button" class="gkeepsake-btn">🖨️ Print or save my plan</button>';
+    const stepsHTML = cur.steps ? '<ul class="gsteps">' + cur.steps.map(st =>
+      '<li><a href="' + esc(st.url) + '" target="_blank" rel="noopener noreferrer">' + esc(st.label) + '</a></li>').join('') + '</ul>' : '';
+    h += '<div class="gdone ' + esc(cur.endingTone || '') + '"><p class="gtag">' + esc(cur.tag) + '</p>' +
+      '<h1 class="gdone-title">' + esc(cur.prompt) + '</h1>' +
+      '<p class="ghint" style="margin-bottom:' + (cur.steps ? '4' : '10') + 'px">' + escText(cur.hint) + '</p>' + stepsHTML +
+      (recap.length ? '<p class="grecap">' + recap.join('  &rarr;  ') + '</p>' : '') +
+      (o.commitment ? '<p class="gcommit-echo">&ldquo;' + esc(o.commitment) + '&rdquo;</p>' : '') +
+      '<div class="gkeys">' + keys + '</div><div class="gend-actions">' + actions + '</div></div>';
+  }
+  h += '<p class="gsupport">' + esc(SUPPORT_LINE) + '</p>';
+  return h;
+}
+
+// a sample path recap for the ending screen
+const RECAP = [
+  { label: 'Take tight control of the money and the decisions' },
+  { label: '“As the father, it is my job to lead and decide.”' },
+  { label: '“Respect is earned through trust, not control.”' },
+  { label: 'Make the big decisions together with his wife' }
+];
+const PLEDGE = 'This month, I will listen more to my partner and children';
+
+// each screen: node + the engine frame on arrival + panel mock state
+const SCREENS = [
+  { f: '01-welcome',        id: 'welcome',        fr: { stage: 5, health: 68, mood: 'noon' } },
+  { f: '02-intro',          id: 'intro',          fr: { stage: 5, health: 68, mood: 'noon' }, trailLen: 2 },
+  { f: '03-pressure-money', id: 'pressure_money', fr: { stage: 5, health: 61, mood: 'noon' }, trailLen: 3 },
+  { f: '04-pressure-role',  id: 'pressure_role',  fr: { stage: 5, health: 54, mood: 'noon' }, trailLen: 3 },
+  { f: '05-pressures-two',  id: 'pressures_two',  fr: { stage: 5, health: 50, mood: 'noon' }, trailLen: 4 },
+  { f: '06-behaviour',      id: 'behaviour',      fr: { stage: 5, health: 50, mood: 'noon' }, picked: 0, trailLen: 5 },
+  { f: '07-impact',         id: 'impact',         fr: { stage: 5, health: 32, mood: 'overcast' }, trailLen: 6 },
+  { f: '08-belief',         id: 'belief',         fr: { stage: 5, health: 22, mood: 'overcast' }, picked: 0, trailLen: 7 },
+  { f: '09-root-tree-model',id: 'root',           fr: { stage: 5, health: 20, mood: 'overcast' }, trailLen: 8 },
+  { f: '10-rebuild-intro',  id: 'rebuild_intro',  fr: { stage: 5, health: 20, mood: 'overcast' }, trailLen: 9 },
+  { f: '11-attitude',       id: 'attitude',       fr: { stage: 5, health: 20, mood: 'overcast' }, picked: 0, trailLen: 10 },
+  { f: '12-behaviour-good', id: 'behaviour_good', fr: { stage: 5, health: 38, mood: 'noon' }, picked: 0, trailLen: 11 },
+  { f: '13-impact-good',    id: 'impact_good',    fr: { stage: 5, health: 60, mood: 'noon' }, trailLen: 12 },
+  { f: '14-outcome-healthy',id: 'outcome_healthy', useDisplay: true, trailLen: 13 },
+  { f: '15-outcome-mixed',  id: 'outcome_mixed',   useDisplay: true, trailLen: 13 },
+  { f: '16-outcome-damaged',id: 'outcome_damaged', useDisplay: true, trailLen: 13 },
+  { f: '17-insist-1',       id: 'insist_1',        useDisplay: true, trailLen: 14 },
+  { f: '18-insist-2',       id: 'insist_2',        useDisplay: true, trailLen: 15 },
+  { f: '19-escalation-warning', id: 'escalation_warning', useDisplay: true, trailLen: 16 },
+  { f: '20-takeaways',      id: 'takeaways',      fr: { stage: 5, health: 100, mood: 'golden', density: 1.4 }, trailLen: 17 },
+  { f: '21-why-matters',    id: 'why_matters',    fr: { stage: 5, health: 100, mood: 'golden', density: 1.4 }, trailLen: 18 },
+  { f: '22-leadership',     id: 'leadership',     fr: { stage: 5, health: 100, mood: 'golden', density: 1.4 }, commitment: PLEDGE, trailLen: 19 },
+  { f: '23-support',        id: 'support',        fr: { stage: 5, health: 100, mood: 'golden', density: 1.4 }, answers: RECAP, commitment: PLEDGE, trailLen: 20 }
+];
+
+const order = [];
+const panels = [];
+for (const sc of SCREENS) {
+  const node = BY_ID[sc.id];
+  const fr = sc.useDisplay ? {
+    stage: node.display.stage, health: node.display.health,
+    palette: node.display.palette || 'spring', mood: node.display.mood, density: node.display.density
+  } : sc.fr;
+
+  const block = document.createElement('div'); block.className = 'block' + (sc.id === 'welcome' ? ' landing' : '');
+  const cv = document.createElement('canvas'); cv.width = 1600; cv.height = 900;
+  block.appendChild(cv);
+  const pan = document.createElement('div'); pan.className = 'panel' + (sc.id === 'welcome' ? ' landing' : '');
+  pan.innerHTML = panelHTML(sc.id, sc);
+  block.appendChild(pan);
+  // first-time coach nudge on the interactive screens (tap to explore / drag onto the tree)
+  if (node.explore || node.drop) {
+    const co = document.createElement('div'); co.className = 'gcoach'; co.setAttribute('role', 'note');
+    co.innerHTML = '<span class="g-emoji">' + (node.drop ? '✋' : '👆') + '</span>' +
+      '<span>' + (node.drop ? 'Drag your choice onto the tree — or just tap it.' : 'Tap each part of the tree to explore it.') + '</span>' +
+      '<button class="g-x" type="button">✕</button>';
+    block.appendChild(co);
+  }
+  document.body.appendChild(block);
+  panels.push(pan);
+
+  const eng = createTreeEngine(cv);
+  eng.regen(SEED);
+  eng.applyTweaks({ palette: fr.palette || 'spring', mood: fr.mood || 'noon', density: fr.density || 1.2 });
+  eng.setHealth(typeof fr.health === 'number' ? fr.health : 100, true);
+  eng.setStage(fr.stage, true);
+  // Orion mirrors the live rule: shown through the journey (Meet…Rebuild) and
+  // wherever a node forces him on (the escalation warning), hidden on the closing screens.
+  const pIdx = PHASE_ORDER.indexOf(node.phase);
+  const showAtlas = typeof node.alpha === 'boolean' ? node.alpha : (pIdx >= 0 && pIdx <= 6);
+  if (eng.setAlpha) eng.setAlpha(showAtlas);
+  if (eng.setThought) eng.setThought(showAtlas ? node.think : null);
+  // the health-driven decline (litter, broken branches, snag) renders statically —
+  // no falling-particle calls needed for a still frame.
+  eng.renderNow(); eng.renderNow(); eng.renderNow();
+  eng.destroy();
+  order.push(sc.f);
+}
+// static equivalent of fitPanel(), after layout+CSS settle: rest at top:220, grow upward,
+// then scale so a tall panel (intro reflection, support keepsake) fits the 900px still
+function fitAll() {
+  for (const pan of panels) {
+    if (pan.classList.contains('landing')) continue;   // centred card, positioned by CSS
+    const ph = pan.offsetHeight;
+    const top = Math.min(220, Math.max(16, 900 - 16 - ph));
+    const avail = 900 - top - 16;
+    pan.style.top = top + 'px';
+    pan.style.setProperty('--pfit', ph > avail ? Math.max(0.5, avail / ph).toFixed(3) : '1');
+  }
+}
+requestAnimationFrame(() => requestAnimationFrame(fitAll));
+window.addEventListener('load', () => requestAnimationFrame(fitAll));
+document.title = 'SCREENS ' + order.length + ' ' + order.join(',');
+</script>
+</body>
+</html>

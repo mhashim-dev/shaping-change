@@ -1,0 +1,675 @@
+:root {
+  --ink: #f5efe2;
+  --gold: #f0c66a;
+  --bar: rgba(26, 19, 11, 0.85);
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  height: 100%;
+  background: #17110a;
+  overflow: hidden;
+  font-family: Helvetica, Arial, sans-serif;
+}
+
+/* ---- scaled 1600x900 scene ---- */
+.stage {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1600px;
+  height: 900px;
+  transform: translate(-50%, -50%);
+  transform-origin: center center;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+}
+.stage canvas { width: 1600px; height: 900px; display: block; }
+
+/* ---- welcome / landing screen: a centred standalone card OVER the full tree scene.
+   The scene stays visible in the background; the panel becomes a centred card (frosted over
+   the scene); clicking Begin drops the card back to the normal side panel. ---- */
+.panel.landing {
+  position: fixed;
+  left: 50%; top: 50%; right: auto; bottom: auto;
+  transform: translate(-50%, -50%);
+  width: min(780px, 94vw); max-width: 780px; max-height: 92vh;
+  overflow: auto;
+  border-color: rgba(240, 198, 106, 0.55);
+  border-radius: 26px;
+  padding: 26px 32px 24px;
+}
+.panel.landing .gtitle { font-size: 30px; }
+.panel.landing::-webkit-scrollbar { width: 8px; }
+.panel.landing::-webkit-scrollbar-thumb { background: rgba(245, 239, 226, 0.2); border-radius: 8px; }
+/* The landing copy is long, so it needs less per-line air than the short story screens
+   (keeps the whole card — including "Begin" — above the fold on more screens). */
+.panel.landing .ghint { margin-bottom: 9px; }
+.panel.landing .ghint br { margin-top: 0.3em; }
+@media (max-width: 900px) {
+  .panel.landing { top: 50%; bottom: auto; width: 94vw; padding: 16px 18px 14px; }
+  .panel.landing .gtitle { font-size: 23px; margin-bottom: 2px; }
+  .panel.landing .ghint { font-size: 13px; margin-bottom: 7px; }
+  .panel.landing .ghint br { margin-top: 0.18em; }
+  .panel.landing .greflect { margin-top: 9px; padding-top: 9px; }
+  .panel.landing .greflect-q { margin-bottom: 6px; }
+  /* On small phones the long intro copy scrolls inside the card; keep the primary
+     "Begin" action pinned to the bottom so the call-to-action is never below the fold. */
+  .panel.landing .panel-foot {
+    position: sticky; bottom: -1px; z-index: 2;
+    margin-top: 6px; padding: 9px 0 5px;
+    background: linear-gradient(to top, rgba(26, 19, 11, 0.98) 58%, rgba(26, 19, 11, 0));
+  }
+}
+
+/* ---- game mode panel (fixed-width side column; bottom sheet on narrow screens) ---- */
+/* The panel NEVER scrolls — nobody should have to scroll to read the text. fitPanel()
+   (app/page.js + poc-ui.js) rests it at top:220 and, when the text needs more room,
+   grows it upward first and only then scales it down to fit via --pfit. */
+.panel {
+  position: fixed;
+  right: 16px;
+  top: 220px;                    /* resting place: below the sun, so it stays visible (team feedback) */
+  width: 452px;                  /* wider = shorter, so less of the scene is covered */
+  overflow: hidden;
+  --pfit: 1;                     /* fit-to-window scale, set by fitPanel() */
+  --fade-y: 0px;                 /* the panel's entry slide (see gfadein) */
+  transform: translateY(var(--fade-y)) scale(var(--pfit));
+  transform-origin: top right;   /* it shrinks toward its anchored corner */
+  background: var(--bar);
+  border: 1px solid rgba(245, 239, 226, 0.14);
+  border-radius: 22px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 14px 18px 16px;
+  color: var(--ink);
+  z-index: 10;
+}
+.panel-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+/* Portrait phones: the panel owns a FIXED 60% band (the scene is a fixed banner above it — see
+   fit()), so the whole layout stays the SAME size on every screen instead of resizing with the
+   text. The support line is pinned to the bottom of the band. */
+@media (max-width: 900px) and (orientation: portrait) {
+  .panel:not(.landing) { min-height: 60vh; display: flex; flex-direction: column; }
+  .panel:not(.landing) .gsupport { margin-top: auto; }
+}
+/* ---- portrait mobile: bottom sheet ---- */
+@media (max-width: 900px) {
+  .panel {
+    right: auto;
+    left: 50%;
+    top: auto;
+    bottom: 0;
+    transform: translateX(-50%) translateY(var(--fade-y)) scale(var(--pfit));
+    transform-origin: bottom center;   /* the sheet shrinks toward the bottom edge it sits on */
+    width: 100%;
+    max-width: 720px;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    padding: 10px 14px 12px;
+    scrollbar-width: none;
+  }
+  .panel::-webkit-scrollbar { display: none; }
+  .panel-top { margin-bottom: 5px; }
+  .gtitle { font-size: 19px; margin-bottom: 4px; }
+  .gq { font-size: 17px; }
+  .ghint { font-size: 13.5px; margin-bottom: 8px; }
+  .gtag { margin-bottom: 4px; }
+  .gframing { font-size: 12px; padding-top: 7px; }
+  .glegend { gap: 5px 14px; margin-bottom: 8px; }
+  .gpills { gap: 7px; }
+  .pill { padding: 10px 14px; font-size: 13.5px; }
+  .ginfo { margin-top: 6px; font-size: 12.5px; min-height: 16px; }
+  .panel-foot { margin-top: 10px; }
+  .grow { padding: 11px 24px; font-size: 14px; }
+  .gcommit { font-size: 14px; padding: 9px 12px; }
+  .gchips { gap: 6px; margin-top: 7px; }
+  .chip { padding: 6px 11px; font-size: 11px; }
+  .gdone-title { font-size: 18px; }
+  .gcommit-echo { font-size: 14px; margin-bottom: 8px; }
+  .gkeys { margin-bottom: 10px; font-size: 12.5px; gap: 5px 14px; }
+  .gsupport { padding-top: 7px; margin-top: 10px; font-size: 13px; }
+  .grecap { font-size: 12.5px; margin-bottom: 10px; }
+}
+
+/* Landscape phones — wide but very short (e.g. iPhone 16 Pro Max landscape is 956px wide, just
+   over the 900px breakpoint, and only ~380–440px tall). The desktop side panel collapsed to a
+   tiny scaled sliver here (a different size on every screen); the bottom sheet would bury the
+   scene. Instead: a right-docked panel that uses the ample width, vertically centred, and scaled
+   to fit the short height by fitPanel(). Compact typography, like the small-phone rules above. */
+@media (max-height: 520px) and (orientation: landscape) {
+  .panel:not(.landing) {
+    right: 8px;
+    left: auto;
+    top: 50%;
+    bottom: auto;
+    width: min(58vw, 480px);
+    max-width: none;
+    border-radius: 20px;
+    padding: 12px 18px 14px;
+    transform: translateY(-50%) translateY(var(--fade-y)) scale(var(--pfit));
+    transform-origin: center right;
+  }
+  .panel:not(.landing) .panel-top { margin-bottom: 5px; }
+  .panel:not(.landing) .gtitle { font-size: 19px; margin-bottom: 4px; }
+  .panel:not(.landing) .gq { font-size: 16px; }
+  .panel:not(.landing) .ghint { font-size: 13px; margin-bottom: 7px; }
+  .panel:not(.landing) .pill { padding: 9px 13px; font-size: 13px; }
+  .panel:not(.landing) .ginfo { font-size: 12px; }
+  .panel:not(.landing) .grow { padding: 10px 20px; font-size: 13.5px; }
+  .panel:not(.landing) .gsupport { font-size: 12.5px; padding-top: 6px; margin-top: 8px; }
+  /* The welcome card also needs to shrink here — otherwise it keeps its desktop size (780px
+     wide, 92vh tall, full-size type), which barely fits a ~400px-tall landscape phone: heavy
+     scroll, and the pinned "Begin" gradient visibly overlaps a chunk of unread text. Narrower +
+     smaller type means less to scroll through and a cleaner fade at the bottom. */
+  .panel.landing {
+    width: min(560px, 84vw);
+    max-height: 88vh;
+    padding: 12px 20px 10px;
+  }
+  .panel.landing .gtitle { font-size: 21px; margin-bottom: 2px; }
+  .panel.landing .ghint { font-size: 12px; margin-bottom: 5px; }
+  .panel.landing .ghint br { margin-top: 0.12em; }
+  /* the landing card scrolls at this height — keep "Begin" pinned so it's never below the fold */
+  .panel.landing .panel-foot {
+    position: sticky; bottom: -1px; z-index: 2;
+    margin-top: 6px; padding: 9px 0 5px;
+    background: linear-gradient(to top, rgba(26, 19, 11, 0.98) 58%, rgba(26, 19, 11, 0));
+  }
+}
+
+
+/* ---- desktop: single-column legend/keys ---- */
+@media (min-width: 901px) {
+  .glegend, .gkeys { grid-template-columns: 1fr !important; }
+}
+.gstep {
+  font: 700 11px/1 Helvetica, Arial, sans-serif;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(245, 239, 226, 0.55);
+}
+.gdots { display: flex; align-items: center; gap: 7px; }
+.gdots span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(245, 239, 226, 0.22);
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.gdots span.on { background: rgba(240, 198, 106, 0.55); }
+.gdots span.now { background: var(--gold); transform: scale(1.3); }
+.panel-top-right { display: flex; align-items: center; gap: 6px; }
+.grestart {
+  appearance: none;
+  border: none;
+  background: none;
+  color: rgba(245, 239, 226, 0.45);
+  font: 500 12px/1 Helvetica, Arial, sans-serif;
+  cursor: pointer;
+  padding: 4px;
+}
+.grestart:hover { color: rgba(245, 239, 226, 0.8); }
+.gsound {
+  appearance: none;
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  font-size: 14px;
+  line-height: 1;
+  opacity: 0.65;
+  filter: grayscale(0.3);
+  transition: opacity 0.15s ease;
+}
+.gsound:hover { opacity: 1; }
+.glang {
+  appearance: none;
+  background: rgba(245, 239, 226, 0.06);
+  border: 1px solid rgba(245, 239, 226, 0.26);
+  color: var(--ink);
+  font: 500 12px/1 Helvetica, Arial, sans-serif;
+  border-radius: 8px;
+  padding: 5px 8px;
+  cursor: pointer;
+}
+.glang:hover { border-color: rgba(240, 198, 106, 0.7); }
+.glang option { color: #1a130b; }
+.gq {
+  font: italic 600 20px/1.25 Georgia, 'Times New Roman', serif;
+  margin: 0 0 4px;
+}
+.gtitle {
+  font: italic 600 24px/1.2 Georgia, 'Times New Roman', serif;
+  margin: 0 0 6px;
+}
+.gtag {
+  font: 700 11px/1 Helvetica, Arial, sans-serif;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0 0 6px;
+}
+.ginfo {
+  font: italic 400 13px/1.45 Georgia, 'Times New Roman', serif;
+  color: rgba(240, 198, 106, 0.9);
+  margin: 10px 2px 0;
+  min-height: 19px;
+}
+.glegend {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px 18px;
+  margin: 0 0 12px;
+  font: 500 13.5px/1.35 Helvetica, Arial, sans-serif;
+  color: rgba(245, 239, 226, 0.92);
+}
+.glegend div { display: flex; align-items: center; gap: 9px; }
+.glegend i {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  flex: none;
+}
+.gframing {
+  font: italic 400 13px/1.5 Georgia, 'Times New Roman', serif;
+  color: rgba(245, 239, 226, 0.66);
+  border-top: 1px solid rgba(245, 239, 226, 0.12);
+  padding-top: 10px;
+  margin: 0;
+}
+.gcommit {
+  width: 100%;
+  resize: none;
+  background: rgba(245, 239, 226, 0.07);
+  border: 1px solid rgba(245, 239, 226, 0.22);
+  border-radius: 14px;
+  color: var(--ink);
+  font: italic 500 16px/1.4 Georgia, 'Times New Roman', serif;
+  padding: 12px 14px;
+  outline: none;
+}
+.gcommit:focus { border-color: rgba(240, 198, 106, 0.7); }
+.gcommit::placeholder { color: rgba(245, 239, 226, 0.35); }
+.gchips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.chip {
+  appearance: none;
+  border: 1px dashed rgba(245, 239, 226, 0.3);
+  background: none;
+  color: rgba(245, 239, 226, 0.7);
+  font: 500 12px/1.3 Helvetica, Arial, sans-serif;
+  padding: 7px 13px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.chip:hover { color: var(--ink); border-color: rgba(240, 198, 106, 0.7); }
+.gcommit-echo {
+  font: italic 600 17px/1.4 Georgia, 'Times New Roman', serif;
+  color: var(--gold);
+  margin: 0 0 12px;
+}
+.gkeys {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 18px;
+  text-align: left;
+  margin: 0 auto 14px;
+  max-width: 560px;
+  font: 500 13px/1.4 Helvetica, Arial, sans-serif;
+  color: rgba(245, 239, 226, 0.88);
+}
+.gkeys div { display: flex; align-items: flex-start; gap: 8px; }
+.gkeys i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--gold);
+  flex: none;
+  margin-top: 5px;
+}
+.gsupport {
+  font: 400 13px/1.5 Helvetica, Arial, sans-serif;   /* safety line — kept comfortably legible */
+  color: rgba(245, 239, 226, 0.62);
+  border-top: 1px solid rgba(245, 239, 226, 0.12);
+  padding-top: 10px;
+  margin: 14px 0 0;
+}
+.ghint {
+  font: 400 14px/1.62 Helvetica, Arial, sans-serif;
+  color: rgba(245, 239, 226, 0.82);
+  margin: 0 0 12px;
+}
+/* Give each line / paragraph break in the story text room to breathe. Short EAL
+   sentences are written one per line, so without this they stack up too tightly. */
+.ghint br { content: ""; display: block; margin-top: 0.5em; }
+/* opt-in "Show the numbers" reveal button (statistics on the closing screen) */
+.greveal {
+  appearance: none;
+  border: 1px solid rgba(240, 198, 106, 0.55);
+  background: rgba(240, 198, 106, 0.08);
+  color: var(--gold);
+  font: 600 13px/1.3 Helvetica, Arial, sans-serif;
+  padding: 9px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  margin: 2px 0 10px;
+  transition: background 0.15s ease;
+}
+.greveal:hover { background: rgba(240, 198, 106, 0.16); }
+.gpills { display: flex; flex-wrap: wrap; gap: 10px; }
+.pill {
+  appearance: none;
+  border: 1px solid rgba(245, 239, 226, 0.26);
+  background: rgba(245, 239, 226, 0.06);
+  color: var(--ink);
+  font: 600 14px/1.35 Helvetica, Arial, sans-serif;
+  text-align: left;
+  padding: 11px 18px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
+}
+.pill:hover { background: rgba(245, 239, 226, 0.14); }
+.pill:active { transform: scale(0.97); }
+.pill.sel {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #2a1f10;
+}
+.panel-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+}
+.gback {
+  appearance: none;
+  border: none;
+  background: none;
+  color: rgba(245, 239, 226, 0.5);
+  font: 500 13px/1 Helvetica, Arial, sans-serif;
+  cursor: pointer;
+  padding: 6px 4px;
+}
+.gback:hover { color: rgba(245, 239, 226, 0.85); }
+.grow {
+  appearance: none;
+  border: none;
+  background: var(--gold);
+  color: #2a1f10;
+  font: 700 15px/1 Helvetica, Arial, sans-serif;
+  letter-spacing: 0.03em;
+  padding: 13px 30px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: filter 0.15s ease, transform 0.1s ease, opacity 0.15s ease;
+}
+.grow:hover:not(:disabled) { filter: brightness(1.08); }
+.grow:active:not(:disabled) { transform: scale(0.97); }
+.grow:disabled { opacity: 0.35; cursor: default; }
+.gdone { text-align: center; padding: 6px 0 2px; }
+.gdone .gtag { display: inline-block; }
+.gdone-title {
+  font: italic 600 22px/1.25 Georgia, 'Times New Roman', serif;
+  margin: 0 0 6px;
+}
+.grecap {
+  font: 400 12.5px/1.5 Helvetica, Arial, sans-serif;
+  color: rgba(245, 239, 226, 0.6);
+  margin: 0 0 14px;
+}
+/* support "next steps" — a LEFT-aligned list of clickable programs (in the centred ending) */
+.gsteps {
+  list-style: none;
+  text-align: left;
+  max-width: 540px;
+  margin: 4px auto 12px;
+  padding: 0;
+  font: 500 14px/1.5 Helvetica, Arial, sans-serif;
+}
+.gsteps li { position: relative; padding-left: 16px; margin: 6px 0; color: rgba(245, 239, 226, 0.9); }
+.gsteps li::before { content: "•"; position: absolute; left: 0; color: var(--gold); }
+.gsteps a { color: var(--gold); text-decoration: underline; text-underline-offset: 2px; }
+.gsteps a:hover { color: #ffd98a; }
+.gsteps a:focus-visible { outline: 3px solid #ffd479; outline-offset: 2px; border-radius: 4px; }
+.gend-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+/* ending-tone accents — withered stays sober, never celebratory */
+.gdone.flourishing .gdone-title { color: var(--gold); }
+.gdone.recovering .gdone-title { color: #cbe0a8; }
+.gdone.withered .gdone-title { color: #c4cace; }
+.gdone.withered .gtag { color: #aeb6ba; }
+
+/* ---- interacting with the tree: discovery legend + drag-to-place ---- */
+.gexplore {
+  font-size: 13px; color: #f0c66a; margin: 8px 0 2px; line-height: 1.35;
+}
+.glegend div { cursor: pointer; }
+.glegend div.locked { opacity: 0.5; font-style: italic; }
+.pill.draggable { cursor: grab; touch-action: none; }
+.pill.draggable:active { cursor: grabbing; }
+.gdrag {
+  position: fixed; z-index: 60; transform: translate(-50%, -50%); pointer-events: none;
+  background: #241b10; color: #f5efe2; border: 1px solid #6b6050; border-radius: 999px;
+  padding: 8px 14px; font-size: 13px; max-width: 320px; line-height: 1.3;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
+}
+.gdrag.over { border-color: #f0c66a; background: #3d2e14; color: #f0c66a; }
+
+/* ---- the panel card fades in when the screen changes ---- */
+/* the slide rides a custom property so it composes with fitPanel()'s --pfit scale */
+@property --fade-y { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@keyframes gfadein { from { opacity: 0; --fade-y: 4px; } to { opacity: 1; --fade-y: 0px; } }
+.panel.fadein { animation: gfadein 0.3s ease-out both; }
+
+/* ============================================================================
+   ACCESSIBILITY (WCAG 2.1 AA) — see scripts/validate-content.mjs for pedagogy,
+   this block for the presentation layer. Applies to the app AND the POC (which
+   inlines this file).
+   ========================================================================== */
+
+/* visible keyboard focus on every interactive control (was relying on the UA
+   default, which several controls suppressed via appearance:none/outline:none) */
+:where(button, a, textarea, [tabindex]):focus-visible {
+  outline: 3px solid #ffd479;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+.pill:focus-visible, .grow:focus-visible, .greveal:focus-visible, .chip:focus-visible { border-radius: 999px; }
+
+/* screen-reader-only text (skip link + live-region announcer) */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0; border: 0;
+  clip: rect(0 0 0 0); clip-path: inset(50%);
+  overflow: hidden; white-space: nowrap;
+}
+.skip-link {
+  position: fixed; left: 8px; top: -60px; z-index: 100;
+  background: var(--gold); color: #2a1f10;
+  font: 700 13px/1 Helvetica, Arial, sans-serif;
+  padding: 10px 16px; border-radius: 8px; text-decoration: none;
+  transition: top 0.15s ease;
+}
+.skip-link:focus { top: 8px; }
+
+/* discovery legend items are real buttons now (keyboard operable) */
+.glegend button {
+  all: unset;
+  box-sizing: border-box;
+  display: flex; align-items: center; gap: 9px;
+  cursor: pointer;
+}
+.glegend button.locked { opacity: 0.6; font-style: italic; cursor: default; }
+.glegend button:focus-visible { outline: 3px solid #ffd479; outline-offset: 3px; border-radius: 6px; }
+
+/* contrast: lift the dimmest secondary text to meet AA on the dark panel */
+.gstep { color: rgba(245, 239, 226, 0.72); }
+.grestart { color: rgba(245, 239, 226, 0.66); }
+.gback { color: rgba(245, 239, 226, 0.7); }
+.gframing { color: rgba(245, 239, 226, 0.8); }
+.gsupport { color: rgba(245, 239, 226, 0.8); }
+.grecap { color: rgba(245, 239, 226, 0.78); }
+.gsound { opacity: 0.8; }
+
+/* optional before/after reflection (evaluation) — a light, skippable self-rating */
+.greflect {
+  border-top: 1px solid rgba(245, 239, 226, 0.12);
+  margin-top: 12px; padding-top: 10px;
+}
+.greflect-q { font: 500 12.5px/1.4 Helvetica, Arial, sans-serif; color: rgba(245, 239, 226, 0.7); margin: 0 0 7px; }
+.greflect-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.greflect-face {
+  appearance: none; border: 1px solid rgba(245, 239, 226, 0.2); background: rgba(245, 239, 226, 0.05);
+  border-radius: 999px; width: 38px; height: 38px; font-size: 19px; line-height: 1; cursor: pointer;
+  transition: transform 0.1s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.greflect-face:hover { transform: scale(1.08); border-color: rgba(240, 198, 106, 0.7); }
+.greflect-face.sel { background: var(--gold); border-color: var(--gold); }
+.greflect-skip {
+  appearance: none; border: none; background: none; color: rgba(245, 239, 226, 0.5);
+  font: 500 12px/1 Helvetica, Arial, sans-serif; cursor: pointer; padding: 6px 4px; margin-left: 4px;
+}
+.greflect-skip:hover { color: rgba(245, 239, 226, 0.85); }
+.greflect-shift { display: flex; align-items: center; gap: 10px; font-size: 22px; }
+.greflect-shift .arrow { color: var(--gold); font-size: 16px; }
+.greflect-thanks { font: italic 400 13px/1.4 Georgia, serif; color: rgba(240, 198, 106, 0.9); margin: 4px 0 0; }
+
+/* facilitator (group-delivery) mode — a banner + per-screen discussion prompt + reset */
+.gfac {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 45;
+  background: #12233a; color: #dceafb;
+  border-top: 2px solid #3f6ea5;
+  padding: 10px 16px;
+  font: 500 13px/1.45 Helvetica, Arial, sans-serif;
+  display: flex; align-items: center; gap: 14px;
+  box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.4);
+}
+.gfac .gfac-tag { font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; font-size: 10.5px; color: #8fc0ff; flex: none; }
+.gfac .gfac-body { flex: 1 1 auto; }
+.gfac .gfac-body b { color: #fff; }
+.gfac button {
+  appearance: none; border: 1px solid #4d7fb8; background: rgba(255, 255, 255, 0.06); color: #dceafb;
+  font: 600 12px/1 Helvetica, Arial, sans-serif; padding: 8px 12px; border-radius: 8px; cursor: pointer; flex: none;
+}
+.gfac button:hover { background: rgba(255, 255, 255, 0.14); }
+@media print { .gfac { display: none !important; } }
+
+/* first-time coach mark — a one-time nudge that the TREE itself is interactive
+   (tap to explore / drag a card onto it). Shown once, then remembered. */
+.gcoach {
+  position: fixed;
+  left: 3vw; bottom: 8vh;
+  z-index: 40;
+  max-width: 260px;
+  display: flex; align-items: flex-start; gap: 10px;
+  background: #241b10; color: #f5efe2;
+  border: 1px solid rgba(240, 198, 106, 0.6);
+  border-radius: 16px;
+  padding: 12px 14px;
+  font: 500 14px/1.4 Helvetica, Arial, sans-serif;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+  animation: gcoachbob 2.2s ease-in-out infinite;
+}
+.gcoach .g-emoji { font-size: 20px; line-height: 1.1; }
+.gcoach .g-x {
+  appearance: none; border: none; background: none; color: rgba(245, 239, 226, 0.7);
+  cursor: pointer; font-size: 16px; line-height: 1; padding: 2px 2px 2px 6px; margin-left: auto;
+}
+.gcoach .g-x:hover { color: #fff; }
+@keyframes gcoachbob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@media (max-width: 900px) { .gcoach { left: 50%; transform: translateX(-50%); bottom: auto; top: 12px; animation: none; } }
+
+/* keepsake: a print/save-friendly summary of the player's plan (built on the ending screen).
+   Hidden on screen; @media print hides the game and shows only this. */
+.gkeepsake-btn {
+  appearance: none;
+  border: 1px solid rgba(240, 198, 106, 0.55);
+  background: rgba(240, 198, 106, 0.08);
+  color: var(--gold);
+  font: 600 13px/1.3 Helvetica, Arial, sans-serif;
+  padding: 9px 16px; border-radius: 999px; cursor: pointer;
+  transition: background 0.15s ease;
+}
+.gkeepsake-btn:hover { background: rgba(240, 198, 106, 0.16); }
+.keepsake { display: none; }
+@media print {
+  @page { margin: 14mm; }
+  html, body { background: #fff !important; height: auto !important; overflow: visible !important; }
+  .stage, .panel, .skip-link, .gdrag, .gcoach, .poc-note, .poc-loading, .gfac { display: none !important; }
+  .keepsake {
+    display: block !important;
+    position: static !important;
+    max-width: 680px; margin: 0 auto; padding: 0;
+    color: #2a241c; font: 400 12.5pt/1.55 Georgia, 'Times New Roman', serif;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  /* ---- header ---- */
+  .keepsake .k-head { display: flex; align-items: center; gap: 14px; border-bottom: 2.5px solid #caa24a; padding-bottom: 12px; }
+  .keepsake .k-logo { flex: none; width: 46px; height: 46px; }
+  .keepsake h1 { font-size: 22pt; color: #5a3e1b; margin: 0; line-height: 1.08; }
+  .keepsake .k-intro { color: #6b6257; font-style: italic; font-size: 11.5pt; margin: 3px 0 0; }
+  .keepsake .k-date { color: #8a7f70; font: 400 9.5pt/1.4 Helvetica, Arial, sans-serif; margin: 8px 0 2px; }
+  /* ---- section headers ---- */
+  .keepsake h2 {
+    font: 700 11pt/1.2 Helvetica, Arial, sans-serif; color: #b8860b;
+    letter-spacing: .07em; text-transform: uppercase;
+    margin: 18px 0 7px; padding-left: 12px; position: relative;
+  }
+  .keepsake h2::before { content: ""; position: absolute; left: 0; top: 1px; bottom: 1px; width: 4px; background: #caa24a; border-radius: 2px; }
+  /* ---- pledge callout ---- */
+  .keepsake .k-pledge {
+    font-style: italic; font-size: 15pt; color: #4a3410;
+    background: #fbf5e6; border: 1px solid #e8d9ac; border-left: 5px solid #caa24a;
+    border-radius: 8px; padding: 13px 18px; margin: 4px 0 2px;
+  }
+  /* ---- the choices (question -> selected answer) ---- */
+  .keepsake .k-journey { list-style: none; padding-left: 0; margin: 4px 0 0; }
+  .keepsake .k-journey li { margin: 0; padding: 8px 0; border-bottom: 1px solid #eee6d6; }
+  .keepsake .k-journey li:last-child { border-bottom: none; }
+  .keepsake .k-journey .k-q { display: block; font-size: 10.5pt; color: #6b6257; }
+  .keepsake .k-journey .k-a { display: block; font-weight: 700; color: #2a241c; padding-left: 18px; position: relative; margin-top: 1px; }
+  .keepsake .k-journey .k-a::before { content: "→"; position: absolute; left: 0; color: #b8860b; font-weight: 400; }
+  .keepsake .k-journey .k-led .k-a { color: #2e6b3a; }
+  .keepsake .k-journey .k-led .k-a::before { content: "🌳"; }
+  /* ---- how I felt ---- */
+  .keepsake .k-felt { font-size: 16pt; margin: 4px 0 0; }
+  .keepsake .k-felt .k-arrow { color: #caa24a; padding: 0 4px; }
+  /* ---- lists: questions keep their 🌱🌿🌳🍎 markers; key messages get green dots ---- */
+  .keepsake ul.k-qlist { list-style: none; padding-left: 2px; margin: 4px 0 0; }
+  .keepsake ul.k-qlist li { margin: 5px 0; }
+  .keepsake ul.k-mlist { list-style: none; padding-left: 0; margin: 4px 0 0; }
+  .keepsake ul.k-mlist li { margin: 5px 0; padding-left: 18px; position: relative; }
+  .keepsake ul.k-mlist li::before { content: "●"; position: absolute; left: 0; color: #4f9a5f; font-size: 8pt; top: 3px; }
+  /* fallback for any unclassed list */
+  .keepsake ul:not(.k-qlist):not(.k-mlist) { padding-left: 20px; }
+  .keepsake li { margin: 4px 0; }
+  /* ---- support footer ---- */
+  .keepsake .k-support {
+    margin-top: 20px; background: #f1f7f0; border: 1px solid #cfe4cf; border-radius: 8px;
+    padding: 11px 16px; font: 600 11pt/1.45 Helvetica, Arial, sans-serif; color: #234b30;
+  }
+  .keepsake .k-foot { margin-top: 8px; color: #8a7f70; font: 400 9pt/1.4 Helvetica, Arial, sans-serif; }
+}
+
+/* honour reduced-motion: no panel slide/fade, no dot scaling, no coach-mark pulse */
+@media (prefers-reduced-motion: reduce) {
+  .panel.fadein { animation: none; }
+  .gdots span { transition: none; }
+  .gcoach, .gcoach::after { animation: none !important; }
+  * { scroll-behavior: auto !important; }
+}

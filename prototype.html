@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Power, Pressure &amp; Choice — concept prototype</title>
+<style>
+  :root{
+    --gold:#f0c66a; --ink:#f5efe2; --panel:rgba(26,19,11,0.86);
+    --serif:Georgia,'Times New Roman',serif; --sans:'Helvetica Neue',Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; font-family:var(--sans); color:var(--ink); overflow:hidden;
+    background:linear-gradient(#3f86cf 0%,#6aabe2 32%,#a8d6ef 58%,#e7efdd 78%,#dfe9c9 100%);
+  }
+  /* ---------- scene ---------- */
+  #scene{position:fixed; inset:0; overflow:hidden}
+  .sun{
+    position:absolute; top:7%; right:11%; width:130px; height:130px; border-radius:50%;
+    background:radial-gradient(circle at 50% 50%, #fff7df 0%, #ffe9a8 36%, rgba(255,221,140,.35) 62%, rgba(255,221,140,0) 72%);
+    transition:opacity 1.4s ease, transform 1.4s ease; filter:blur(.3px);
+  }
+  .hill{position:absolute; left:-10%; width:120%; border-radius:50% 50% 0 0 / 100% 100% 0 0; transition:filter 1.4s ease}
+  .hill.h1{bottom:14%; height:30%; background:linear-gradient(#9cc06a,#86ad58)}
+  .hill.h2{bottom:11%; left:-25%; width:90%; height:24%; background:linear-gradient(#8ab85f,#74a24a)}
+  .hill.h3{bottom:11%; right:-25%; left:auto; width:95%; height:27%; background:linear-gradient(#94bb63,#7da64e)}
+  .ground{position:absolute; left:0; right:0; bottom:0; height:14%; background:linear-gradient(#6f9b3f,#5c8633); transition:filter 1.4s ease}
+  /* atmosphere overlays driven by health */
+  .wash{position:absolute; inset:0; pointer-events:none; transition:opacity 1.6s ease}
+  #washGold{background:radial-gradient(120% 90% at 78% 12%, rgba(255,206,120,.42), rgba(255,184,92,.12) 45%, rgba(255,184,92,0) 70%); opacity:0}
+  #washGrey{background:linear-gradient(rgba(150,158,165,.0), rgba(120,130,140,.46)); opacity:0; mix-blend-mode:luminosity}
+  #treeWrap{position:absolute; left:0; right:420px; top:0; bottom:0; display:flex; align-items:flex-end; justify-content:center}
+  svg#tree{width:min(70%,640px); height:88%; overflow:visible; transform-origin:50% 100%; animation:sway 9s ease-in-out infinite}
+  @keyframes sway{0%,100%{transform:rotate(-.5deg)}50%{transform:rotate(.5deg)}}
+  .branch{stroke-linecap:round; transition:opacity 1s ease}
+  .leaf{transition:opacity 1.1s ease, fill 1.4s ease, transform 1.1s ease; transform-origin:center}
+  /* falling leaves layer */
+  #fallLayer{position:absolute; inset:0; pointer-events:none; overflow:hidden}
+  .fall{position:absolute; width:11px; height:8px; border-radius:60% 40% 60% 40%; opacity:.9}
+  @keyframes drop{to{transform:translateY(78vh) translateX(var(--dx)) rotate(540deg); opacity:0}}
+
+  /* ---------- panel ---------- */
+  #panel{
+    position:fixed; top:0; right:0; width:420px; height:100%; padding:26px 26px 18px;
+    background:var(--panel); backdrop-filter:blur(6px); border-left:1px solid rgba(240,198,106,.22);
+    display:flex; flex-direction:column; box-shadow:-18px 0 50px rgba(0,0,0,.28);
+  }
+  .badge{
+    align-self:flex-start; font-size:11px; letter-spacing:.13em; text-transform:uppercase;
+    color:#1c140b; background:var(--gold); padding:4px 10px; border-radius:20px; font-weight:700;
+  }
+  .dots{display:flex; gap:7px; margin:18px 0 4px}
+  .dot{width:9px; height:9px; border-radius:50%; background:rgba(245,239,226,.22); transition:.4s}
+  .dot.done{background:rgba(240,198,106,.55)}
+  .dot.now{background:var(--gold); box-shadow:0 0 0 4px rgba(240,198,106,.18)}
+  .tag{font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--gold); margin:16px 0 8px; opacity:.9}
+  .prompt{font-family:var(--serif); font-style:italic; font-size:25px; line-height:1.28; margin:0 0 12px}
+  .hint{font-size:14.5px; line-height:1.55; color:rgba(245,239,226,.78); margin:0 0 18px}
+  .opts{display:flex; flex-direction:column; gap:10px; overflow-y:auto; padding-right:4px}
+  .opts::-webkit-scrollbar{width:6px}
+  .opts::-webkit-scrollbar-thumb{background:rgba(240,198,106,.3); border-radius:3px}
+  .pill{
+    text-align:left; font-family:var(--sans); font-size:14.5px; line-height:1.4; color:var(--ink);
+    background:rgba(245,239,226,.07); border:1px solid rgba(245,239,226,.18); border-radius:14px;
+    padding:13px 15px; cursor:pointer; transition:.2s;
+  }
+  .pill:hover{background:rgba(245,239,226,.14); border-color:rgba(240,198,106,.5)}
+  .pill.sel{background:var(--gold); color:#1c140b; border-color:var(--gold); font-weight:600}
+  .pill.dim{opacity:.4; pointer-events:none}
+  .insight{
+    font-family:var(--serif); font-style:italic; font-size:15px; line-height:1.55;
+    color:#fbe8c4; border-left:2px solid var(--gold); padding:4px 0 4px 14px; margin:16px 2px 0;
+    opacity:0; transition:opacity .6s ease;
+  }
+  .insight.show{opacity:1}
+  .cta{
+    margin-top:16px; align-self:flex-start; font-family:var(--sans); font-weight:700; font-size:14px;
+    color:#1c140b; background:var(--gold); border:none; border-radius:24px; padding:12px 26px; cursor:pointer;
+    opacity:0; transform:translateY(6px); transition:.35s; pointer-events:none;
+  }
+  .cta.show{opacity:1; transform:none; pointer-events:auto}
+  .commitBox{width:100%; min-height:74px; margin-top:6px; padding:12px 14px; border-radius:12px; resize:none;
+    font-family:var(--serif); font-style:italic; font-size:15px; color:var(--ink);
+    background:rgba(245,239,226,.07); border:1px solid rgba(245,239,226,.22)}
+  .sugg{display:flex; flex-wrap:wrap; gap:7px; margin-top:10px}
+  .sugg button{font-size:12px; color:var(--ink); background:rgba(245,239,226,.08); border:1px solid rgba(245,239,226,.2);
+    border-radius:16px; padding:6px 11px; cursor:pointer}
+  .sugg button:hover{border-color:var(--gold)}
+  .spacer{flex:1}
+  .support{font-size:12px; line-height:1.5; color:rgba(245,239,226,.62); border-top:1px solid rgba(245,239,226,.14);
+    padding-top:12px; margin-top:14px}
+  .support b{color:var(--gold); font-weight:600}
+
+  @media (max-width:880px){
+    body{overflow:auto}
+    #treeWrap{right:0; bottom:46vh; top:0}
+    svg#tree{height:80%}
+    .sun{top:4%}
+    #panel{top:auto; bottom:0; width:100%; height:auto; max-height:62vh; border-left:none;
+      border-top:1px solid rgba(240,198,106,.22); box-shadow:0 -18px 40px rgba(0,0,0,.3)}
+    .prompt{font-size:21px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    svg#tree{animation:none}
+    .fall{display:none}
+  }
+</style>
+</head>
+<body>
+  <div id="scene">
+    <div class="sun" id="sun"></div>
+    <div class="hill h2"></div><div class="hill h3"></div><div class="hill h1"></div>
+    <div class="ground" id="ground"></div>
+    <div class="wash" id="washGold"></div>
+    <div class="wash" id="washGrey"></div>
+    <div id="treeWrap">
+      <svg id="tree" viewBox="0 0 400 460" preserveAspectRatio="xMidYMax meet"></svg>
+    </div>
+    <div id="fallLayer"></div>
+  </div>
+
+  <aside id="panel">
+    <span class="badge">Early prototype · concept demo</span>
+    <div class="dots" id="dots"></div>
+    <div class="tag" id="tag"></div>
+    <h1 class="prompt" id="prompt"></h1>
+    <p class="hint" id="hint"></p>
+    <div class="opts" id="opts"></div>
+    <p class="insight" id="insight"></p>
+    <button class="cta" id="cta"></button>
+    <div class="spacer"></div>
+    <p class="support">If this raised something for you: <b>1800RESPECT</b> (1800 737 732) · in an emergency call <b>000</b></p>
+  </aside>
+
+<script>
+/* ============================================================
+   CONTENT — faithful to the program's branching script.
+   kind drives consequence (health), never appearance.
+   ============================================================ */
+const PHASES = ['Roots','Soil','Trunk','Branches','Turning point','Self','Family','Community','Commit'];
+
+const NODES = {
+  intro:{type:'intro', phase:'Intro', tag:'Welcome',
+    prompt:'Power, Pressure & Choice',
+    hint:'Same pressures can grow very different trees. What changes the outcome is not where a man starts — it’s the beliefs he holds, how he responds, and whether he leads. Grow a tree, watch what it bears, and shape where it goes.',
+    opts:[{label:'Begin', next:'roots', h:0}]},
+
+  roots:{type:'pick', phase:'Roots', tag:'Roots · Causes & Pressures',
+    prompt:'Choose a pressure this man is carrying',
+    hint:'Every behaviour starts somewhere. Pressures build below the surface, long before anything is visible. None of these are his fault — they are weight he is under.',
+    opts:[
+      {label:'Migration stress & loss of status', next:'soil', h:0, info:'Starting over can strip away identity, status and the networks that once held him up.'},
+      {label:'Financial strain & provider expectations', next:'soil', h:0, info:'Being expected to carry the whole family alone is a heavy, quiet pressure.'},
+      {label:'Racism & discrimination', next:'soil', h:0, info:'Being judged and excluded adds stress that builds invisibly, day after day.'},
+      {label:'Isolation from support', next:'soil', h:0, info:'Far from family and old friends, pressure has nowhere safe to go.'}]},
+
+  soil:{type:'pick', phase:'Soil', tag:'Soil · Attitudes, Values & Beliefs',
+    prompt:'Same pressure — but what is feeding the soil?',
+    hint:'Beliefs sit between pressure and behaviour: they decide what grows. This is the first place the man genuinely chooses.',
+    opts:[
+      {label:'“I must stay in control”', next:'trunk', h:-8, info:'Filtered through this, pressure turns into a need for power over others. Understanding why it forms never makes what it grows okay.'},
+      {label:'“Family reputation comes before wellbeing”', next:'trunk', h:-8, info:'Protecting the image can silence what is really going on at home.'},
+      {label:'“Asking for help is weakness”', next:'trunk', h:-8, info:'It keeps stress locked inside until it finds another way out.'},
+      {label:'“I can share the load — honesty protects my family more than image”', next:'trunk', h:8, info:'A healthier belief filters the same pressure very differently. It keeps the soil rich and gives stress somewhere safe to go.'}]},
+
+  trunk:{type:'pick', phase:'Trunk', tag:'Trunk · Behaviours',
+    prompt:'The pressure is real and rising. How does he respond?',
+    hint:'Understanding causes never excuses harm — it helps us prevent it. Pressure can be acted out, or noticed and paused before it lands on anyone.',
+    opts:[
+      {label:'Tighten control over the money', next:'impact', h:-10, info:'Controlling behaviour grows where pressure meets the belief that he must stay in control. Respect doesn’t mean control.'},
+      {label:'Shut down and withdraw at home', next:'impact', h:-10, info:'Shutting down can feel like control when everything else is uncertain — but the people closest still feel the cold.'},
+      {label:'Let it out as anger and blame', next:'impact', h:-10, info:'Stress with no outlet often lands on the people closest. Naming this honestly is the start of preventing it.'},
+      {label:'Notice the pressure rising — and pause before acting', next:'impact', h:6, info:'Pausing isn’t weakness; it’s the moment a leader interrupts the pattern before it reaches anyone.'}]},
+
+  impact:{type:'pick', phase:'Branches', tag:'Branches · Impacts',
+    prompt:'Behaviours bear fruit. Who feels it?',
+    hint:'Impacts reach further than the man himself. Naming this honestly is not a failure — it is the first act of leadership. No choice here is ‘wrong’.',
+    opts:[
+      {label:'His partner feels unsafe and unheard', next:'pivot', h:0, info:'This is where harm becomes real — and where responsibility begins. Seeing it clearly is what makes change possible.'},
+      {label:'His children absorb the power dynamics', next:'pivot', h:0, info:'Children learn what they see — and can carry it forward. Naming it honestly is how the pattern stops with him.'},
+      {label:'The community loses trust and connection', next:'pivot', h:0, info:'What happens inside homes shapes the whole community — and so does a man who chooses to lead differently.'}]},
+
+  pivot:{type:'pick', phase:'Turning point', tag:'Turning point · His stance',
+    prompt:'The impact is visible now. What does he do with that?',
+    hint:'This is the choice that decides which tree grows. It is about HIS response to harm he can now see. Leaders notice the harm and choose again.',
+    opts:[
+      {label:'Own it — “this is on me to change”', next:'self', h:16, info:'Accountability is the strongest move available, and it is fully open to him no matter what came before. This is where the tree can recover.'},
+      {label:'Defend it — “I’m under pressure, they don’t understand”', next:'reckon', h:-14, info:'Defensiveness is understandable, but it protects the behaviour, not the family. A different choice is still right here.'},
+      {label:'Shut down — say nothing, carry on', next:'reckon', h:-18, info:'Silence lets the pattern keep growing in the dark. Saying nothing is itself a choice — and it can be unmade.'}]},
+
+  reckon:{type:'pick', phase:'Turning point', tag:'Turning point · The door is still open',
+    prompt:'The tree is bare and the harm is plain. It is not too late.',
+    hint:'A withered tree is a warning, not a verdict. What happens next is still his to choose — and choosing accountability now is exactly what leadership looks like.',
+    opts:[
+      {label:'Stop, own the harm, and be accountable', next:'self', h:20, info:'Change is possible after harm — this is the program’s whole point. The tree can come back.'},
+      {label:'Keep insisting he’s the one being wronged', next:'end_withered', h:-10, info:'Doubling down is the path that ends bare. You can still go back and choose differently — the door doesn’t close.'}]},
+
+  self:{type:'pick', phase:'Self', tag:'Fix the tree · Self',
+    prompt:'The tree is still pale. What does he do for himself?',
+    hint:'Healing is active and chosen, not automatic. Asking for help is always the stronger move here — never the weaker one.',
+    opts:[
+      {label:'Acknowledge the stress and seek support', next:'family', h:12, info:'New belief: “I don’t need to handle everything alone.” Strong men seek help.'},
+      {label:'Notice his warning signs early and name them', next:'family', h:12, info:'New belief: “I can catch the pattern before it reaches anyone.”'},
+      {label:'Push through alone — “real men just cope”', next:'family', h:-10, info:'Toughing it out is the belief that started the trunk. The strong choice is to reach out.'}]},
+
+  family:{type:'pick', phase:'Family', tag:'Fix the tree · Family & Peers',
+    prompt:'What does he do at home and with his mates?',
+    hint:'Leadership is closest to home first. Real change is not the same as smoothing things over.',
+    opts:[
+      {label:'Share decision-making and money openly at home', next:'community', h:12, info:'New belief: “Respect doesn’t mean control.” Shared power is what safety is built on.'},
+      {label:'Model respect for his partner in front of the kids', next:'community', h:12, info:'New belief: “What the children see, they carry forward.”'},
+      {label:'Keep the peace by quietly controlling the money himself', next:'community', h:-10, info:'Control dressed as responsibility is still control. The leadership move is to share it.'}]},
+
+  community:{type:'pick', phase:'Community', tag:'Fix the tree · Community',
+    prompt:'What does he lead beyond his own home?',
+    hint:'Leaders set the norms other men live by. Staying silent is also a choice about those norms.',
+    opts:[
+      {label:'Normalise help-seeking among the men around him', next:'commit', h:12, info:'New belief: “Strong men seek help and protect wellbeing.”'},
+      {label:'Challenge harmful behaviour in other men, respectfully', next:'commit', h:12, info:'New belief: “Leadership is setting the norm, not just keeping my own house in order.”'},
+      {label:'Keep family business private — “not my problem”', next:'commit', h:-10, info:'Silence and bystanding are how harm stays normal. Minding his own here isn’t neutral.'}]},
+
+  commit:{type:'commit', phase:'Commit', tag:'Your leadership commitment',
+    prompt:'Write one action you will take as a leader',
+    hint:'Small, real, and yours — that’s what makes it leadership.',
+    suggestions:['Start honest conversations with men','Challenge harmful behaviour respectfully','Support someone under stress','Model respect in family and community spaces'],
+    opts:[{label:'Commit', next:'RESOLVE', h:0}]},
+
+  end_flourishing:{type:'ending', phase:'Ending', tag:'Ending · Flourishing',
+    prompt:'The tree stands in full colour — a leader by choice',
+    hint:'Not by chance — by choice. He held a healthier belief, paused before pressure became harm, and led at every level. This is ongoing leadership, not a finish line.',
+    display:{h:100, grown:1.0},
+    opts:[{label:'Plant another tree', next:'intro', h:0}]},
+
+  end_recovering:{type:'ending', phase:'Ending', tag:'Ending · Recovering',
+    prompt:'Recovering — by accountability',
+    hint:'Harm happened, and he felt it land. Then he stopped, owned it, and chose to lead differently. That is what leadership actually looks like. Some marks remain; the tree is greener than it was, and still growing.',
+    display:{h:72, grown:0.95},
+    opts:[{label:'Plant another tree', next:'intro', h:0}]},
+
+  end_withered:{type:'ending', phase:'Ending', tag:'Ending · Withered',
+    prompt:'The tree stands bare — a warning, not a verdict',
+    hint:'When pressure is acted out and never owned, this is what the people closest live with. This was never inevitable — a healthier belief, a pause, or owning the harm at any point led somewhere else. It is not too late, and it is not a verdict on any man or community.',
+    display:{h:12, grown:0.55},
+    opts:[
+      {label:'Go back and choose again', next:'pivot', h:0, info:'Revisit the turning point — the door is still open.'},
+      {label:'Start over', next:'intro', h:0}]},
+};
+
+/* ============================================================
+   TREE — procedural SVG, generated once, then revealed/coloured
+   by (grown, health). Simpler than the real canvas engine.
+   ============================================================ */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const svg=document.getElementById('tree');
+const SVGNS='http://www.w3.org/2000/svg';
+const branchEls=[], leafEls=[];
+const MAX=9;
+
+(function genTree(){
+  const rand=mulberry32(20260615);
+  const branches=[], leaves=[];
+  (function grow(x,y,ang,len,w,depth){
+    if(depth>MAX||len<6) return;
+    const x2=x+Math.cos(ang)*len, y2=y+Math.sin(ang)*len;
+    branches.push({x1:x,y1:y,x2,y2,w,depth});
+    if(depth>=4){
+      const n=1+Math.floor(rand()*2);
+      for(let i=0;i<n;i++)
+        leaves.push({x:x2+(rand()-0.5)*len*0.7, y:y2+(rand()-0.5)*len*0.7, depth, r:rand()});
+    }
+    let count;
+    if(depth===0) count=1;
+    else if(depth===1) count=rand()<0.5?1:2;
+    else count=rand()<0.33?3:2;
+    const baseSpread=count===1?0.16:0.62;
+    for(let i=0;i<count;i++){
+      const t=count===1?0:(i/(count-1))-0.5;
+      const off=t*baseSpread + (rand()-0.5)*0.22 - 0.05; // gentle upward bias
+      grow(x2,y2,ang+off, len*(0.74+rand()*0.06), w*0.7, depth+1);
+    }
+  })(200,455,-Math.PI/2,86,15,0);
+
+  for(const b of branches){
+    const el=document.createElementNS(SVGNS,'line');
+    el.setAttribute('x1',b.x1.toFixed(1));el.setAttribute('y1',b.y1.toFixed(1));
+    el.setAttribute('x2',b.x2.toFixed(1));el.setAttribute('y2',b.y2.toFixed(1));
+    el.setAttribute('stroke-width',Math.max(1,b.w).toFixed(1));
+    el.setAttribute('class','branch');
+    el.dataset.appear=(b.depth/MAX).toFixed(3);
+    svg.appendChild(el); branchEls.push(el);
+  }
+  for(const lf of leaves){
+    const el=document.createElementNS(SVGNS,'ellipse');
+    el.setAttribute('cx',lf.x.toFixed(1));el.setAttribute('cy',lf.y.toFixed(1));
+    el.setAttribute('rx','5.4');el.setAttribute('ry','3.6');
+    el.setAttribute('class','leaf');
+    el.setAttribute('transform',`rotate(${(lf.r*120-60).toFixed(0)} ${lf.x.toFixed(1)} ${lf.y.toFixed(1)})`);
+    el.dataset.appear=(lf.depth/MAX).toFixed(3);
+    el.dataset.r=lf.r.toFixed(3);
+    el.dataset.x=lf.x.toFixed(1); el.dataset.y=lf.y.toFixed(1);
+    svg.appendChild(el); leafEls.push(el);
+  }
+})();
+
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const lerp=(a,b,t)=>a+(b-a)*t;
+
+function renderTree(health, grown){
+  const t=clamp((health-25)/70,0,1);                 // health → greenness
+  const barkGrey=clamp((45-health)/35,0,0.7);
+  const bark=`rgb(${Math.round(lerp(107,120,barkGrey))},${Math.round(lerp(76,108,barkGrey))},${Math.round(lerp(49,100,barkGrey))})`;
+  for(const el of branchEls){
+    el.style.opacity = (+el.dataset.appear <= grown+0.02) ? '1':'0';
+    el.setAttribute('stroke',bark);
+  }
+  const density=clamp(0.18+0.82*((health-28)/72),0,1);
+  for(const el of leafEls){
+    const r=+el.dataset.r, appear=+el.dataset.appear;
+    const on = appear<=grown && r<=density;
+    el.style.opacity = on?'1':'0';
+    const hue=lerp(74,130,t)+(r-0.5)*10;
+    const sat=lerp(24,60,t);
+    const lig=lerp(34,47,clamp(health/100,0,1))+(r-0.5)*6;
+    el.setAttribute('fill',`hsl(${hue.toFixed(0)} ${sat.toFixed(0)}% ${lig.toFixed(0)}%)`);
+  }
+  // sky / light mood
+  document.getElementById('washGold').style.opacity = clamp((health-68)/32,0,0.55).toFixed(2);
+  document.getElementById('washGrey').style.opacity = clamp((48-health)/30,0,0.62).toFixed(2);
+  const sun=document.getElementById('sun');
+  sun.style.opacity=clamp((health-20)/55,0.18,1).toFixed(2);
+  sun.style.transform=`scale(${(0.85+t*0.3).toFixed(2)})`;
+  const dim=`saturate(${(0.55+t*0.55).toFixed(2)})`;
+  document.querySelectorAll('.hill,.ground').forEach(h=>h.style.filter=dim);
+}
+
+let lastHealth=50;
+function dropLeaves(n){
+  if(window.matchMedia('(prefers-reduced-motion:reduce)').matches) return;
+  const layer=document.getElementById('fallLayer');
+  const wrap=document.getElementById('treeWrap').getBoundingClientRect();
+  const visible=leafEls.filter(e=>e.style.opacity==='1');
+  for(let i=0;i<n;i++){
+    const src=visible[Math.floor(Math.random()*visible.length)];
+    if(!src) break;
+    const pt=src.getBoundingClientRect();
+    const d=document.createElement('div'); d.className='fall';
+    d.style.left=(pt.left+pt.width/2)+'px'; d.style.top=(pt.top)+'px';
+    d.style.background=src.getAttribute('fill');
+    d.style.setProperty('--dx',((Math.random()-0.5)*120).toFixed(0)+'px');
+    d.style.animation=`drop ${(2.4+Math.random()*1.6).toFixed(1)}s ease-in forwards`;
+    layer.appendChild(d); setTimeout(()=>d.remove(),4200);
+  }
+}
+
+/* ============================================================
+   FLOW
+   ============================================================ */
+let state={health:50, grown:0.12, nodeId:'intro', commitText:''};
+const grownFor=ph=>{const i=PHASES.indexOf(ph); return i<0?0.12:lerp(0.28,1.0,(i+1)/PHASES.length);};
+
+const $=id=>document.getElementById(id);
+
+function resolveEnding(){ return state.health>=82 ? 'end_flourishing' : 'end_recovering'; }
+
+function render(){
+  const node=NODES[state.nodeId];
+  if(node.display){ state.health=node.display.h; state.grown=node.display.grown; }
+  else if(node.phase!=='Intro') state.grown=Math.max(state.grown,grownFor(node.phase));
+  renderTree(state.health,state.grown);
+  lastHealth=state.health;
+
+  // progress dots
+  const cur=PHASES.indexOf(node.phase);
+  $('dots').innerHTML=PHASES.map((p,i)=>{
+    let c='dot'; if(cur>=0&&i<cur)c+=' done'; if(i===cur)c+=' now'; return `<span class="${c}" title="${p}"></span>`;
+  }).join('');
+
+  $('tag').textContent=node.tag;
+  $('prompt').textContent=node.prompt;
+  $('hint').textContent=node.hint;
+  $('insight').className='insight'; $('insight').textContent='';
+  const cta=$('cta'); cta.className='cta'; cta.onclick=null;
+  const opts=$('opts'); opts.innerHTML='';
+
+  if(node.type==='commit'){
+    const ta=document.createElement('textarea'); ta.className='commitBox';
+    ta.placeholder='e.g. Start honest conversations with the men around me…';
+    ta.value=state.commitText; ta.oninput=()=>state.commitText=ta.value;
+    opts.appendChild(ta);
+    const sg=document.createElement('div'); sg.className='sugg';
+    node.suggestions.forEach(s=>{const b=document.createElement('button');b.textContent=s;b.onclick=()=>{ta.value=s;state.commitText=s;};sg.appendChild(b);});
+    opts.appendChild(sg);
+    showCTA(node.opts[0].label,()=>go('RESOLVE'));
+    return;
+  }
+
+  if(node.type==='intro'||node.type==='ending'){
+    node.opts.forEach(o=>{
+      const b=document.createElement('button'); b.className='pill'; b.textContent=o.label;
+      b.onclick=()=>{ if(o.info){flashInsight(o.info); setTimeout(()=>go(o.next),900);} else go(o.next); };
+      opts.appendChild(b);
+    });
+    return;
+  }
+
+  // pick
+  node.opts.forEach((o,idx)=>{
+    const b=document.createElement('button'); b.className='pill'; b.textContent=o.label;
+    b.onclick=()=>choose(idx); opts.appendChild(b);
+  });
+}
+
+function choose(idx){
+  const node=NODES[state.nodeId], o=node.opts[idx];
+  [...$('opts').children].forEach((el,i)=>{el.classList.add('dim'); if(i===idx){el.classList.remove('dim');el.classList.add('sel');}});
+  const before=state.health;
+  state.health=clamp(state.health+o.h,0,100);
+  if(node.phase!=='Intro') state.grown=Math.max(state.grown,grownFor(node.phase));
+  renderTree(state.health,state.grown);
+  if(state.health<before) dropLeaves(o.h<=-14?14:8);
+  flashInsight(o.info||'');
+  showCTA('Continue',()=>go(o.next));
+}
+
+function flashInsight(txt){
+  const el=$('insight'); el.textContent=txt;
+  if(txt){ requestAnimationFrame(()=>el.classList.add('show')); }
+}
+function showCTA(label,fn){ const c=$('cta'); c.textContent=label; c.onclick=fn; requestAnimationFrame(()=>c.classList.add('show')); }
+
+function go(next){
+  if(next==='RESOLVE') next=resolveEnding();
+  if(next==='intro'){ state.health=50; state.grown=0.12; state.commitText=''; }
+  state.nodeId=next; render();
+}
+
+render();
+</script>
+</body>
+</html>
