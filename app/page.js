@@ -320,22 +320,28 @@ export default function Home() {
     const label = translateNode(current, lang).options[i].label;
     const setHL = (v) => { const e = engineRef.current; if (e && e.setHighlight) e.setHighlight(v); };
     const partAt = (e) => (stageApi.current ? stageApi.current.partAt(e.clientX, e.clientY) : null);
+    // roots aren't a pickable target on the soil-drop screen, and they sit right where a
+    // player naturally aims (near the trunk base) — so a "roots" hit there should still count
+    // as a soil drop, rather than silently rejecting it (team feedback).
+    const matchesDrop = (part) => part === current.drop || (current.drop === 'soil' && part === 'roots');
     setHL(current.drop);
     setDragUI({ x: ev.clientX, y: ev.clientY, over: false, label });
     const move = (e) => {
-      const over = partAt(e) === current.drop;
+      const over = matchesDrop(partAt(e));
       setDragUI({ x: e.clientX, y: e.clientY, over, label });
     };
     const up = (e) => {
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', up);
-      const dropped = partAt(e) === current.drop;
+      const dropped = matchesDrop(partAt(e));
       setHL(null);
       setDragUI(null);
       if (dropped) {
         setPicked(i);
         const e2 = engineRef.current;
-        if (e2 && current.drop === 'soil' && e2.pulseWater) e2.pulseWater();
+        // only a genuinely HEALTHY choice waters the soil — a neutral pick still advances
+        // the story, but shouldn't get the same positive reinforcement as a healthy one
+        if (e2 && current.drop === 'soil' && current.options[i].kind === 'healthy' && e2.pulseWater) e2.pulseWater();
       }
     };
     window.addEventListener('pointermove', move);

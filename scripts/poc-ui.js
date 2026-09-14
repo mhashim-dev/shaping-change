@@ -248,17 +248,23 @@
       dragGhost.style.left = x + 'px'; dragGhost.style.top = y + 'px';
       dragGhost.className = 'gdrag' + (over ? ' over' : '');
     };
+    // roots aren't a pickable target on the soil-drop screen, and they sit right where a
+    // player naturally aims (near the trunk base) — so a "roots" hit there should still count
+    // as a soil drop, rather than silently rejecting it (team feedback).
+    var matchesDrop = function (part) { return part === curNode.drop || (curNode.drop === 'soil' && part === 'roots'); };
     place(ev.clientX, ev.clientY, false);
-    var move = function (e) { place(e.clientX, e.clientY, partAt(e.clientX, e.clientY) === curNode.drop); };
+    var move = function (e) { place(e.clientX, e.clientY, matchesDrop(partAt(e.clientX, e.clientY))); };
     var up = function (e) {
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', up);
-      var dropped = partAt(e.clientX, e.clientY) === curNode.drop;
+      var dropped = matchesDrop(partAt(e.clientX, e.clientY));
       if (engine.setHighlight) engine.setHighlight(null);
       endDrag();
       if (dropped) {
         picked = i;
-        if (curNode.drop === 'soil' && engine.pulseWater) engine.pulseWater();
+        // only a genuinely HEALTHY choice waters the soil — a neutral pick still advances
+        // the story, but shouldn't get the same positive reinforcement as a healthy one
+        if (curNode.drop === 'soil' && curNode.options[i].kind === 'healthy' && engine.pulseWater) engine.pulseWater();
         render();
       }
     };

@@ -11,6 +11,9 @@
 # macOS
 .DS_Store
 
+# temp lock files created while a Word/PowerPoint doc is open on someone's machine
+~$*
+
 # historical local snapshots from earlier work sessions — superseded by git history now,
 # and too bulky to carry in every clone. Left on disk, just not tracked.
 /backups/
