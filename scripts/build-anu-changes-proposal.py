@@ -72,6 +72,14 @@ def current_vs_suggested(current, suggested):
     shade(p2, 'EFF6EF')
 
 
+def approved_wording(text):
+    p = doc.add_paragraph(); p.paragraph_format.space_before = Pt(2); p.paragraph_format.space_after = Pt(6)
+    p.paragraph_format.left_indent = Pt(10)
+    l = p.add_run('Approved final wording (Anu):  '); l.bold = True; l.font.size = Pt(9.5); l.font.color.rgb = BLUE
+    t = p.add_run(text); t.bold = True; t.font.size = Pt(9.5); t.font.color.rgb = DARK
+    shade(p, 'EAF1FA')
+
+
 def screen_heading(num, title):
     p = doc.add_paragraph(); p.paragraph_format.space_before = Pt(18); p.paragraph_format.space_after = Pt(2)
     r = p.add_run(f'Screen {num}: {title}'); r.bold = True; r.font.size = Pt(14); r.font.color.rgb = GOLD
@@ -92,12 +100,13 @@ def effort(label, color):
 
 # ---------------- HEADER ----------------
 title = doc.add_paragraph(); r = title.add_run('Shaping Change'); r.bold = True; r.font.size = Pt(24); r.font.color.rgb = DARK
-sub = doc.add_paragraph(); r = sub.add_run('Proposed Changes: Anu’s Feedback & Ali’s Text Suggestions'); r.bold = True; r.italic = True; r.font.size = Pt(14); r.font.color.rgb = GOLD
+sub = doc.add_paragraph(); r = sub.add_run('Confirmed Changes: Anu’s Feedback & Ali’s Text Suggestions'); r.bold = True; r.italic = True; r.font.size = Pt(14); r.font.color.rgb = GOLD
 sub.paragraph_format.space_after = Pt(6)
-para('Part 1 is a screen-by-screen proposal for what the multi-select and related changes would actually '
-     'involve, based on Anu’s replies (17 September 2026) to Oleksandra’s comments. Part 2 covers '
-     'Ali’s suggestions for cutting down on-screen text, from "Suggestions to the game.docx" (17 September '
-     '2026). This is a planning document, not a build; nothing here has been implemented yet.',
+para('Part 1 is a screen-by-screen proposal for what the multi-select and related changes actually '
+     'involve, based on Anu’s replies (17 and 28 September 2026) to Oleksandra’s comments. Part 2 covers '
+     'Ali’s suggestions for cutting down on-screen text, from "Suggestions to the game.docx", with Anu’s '
+     'approval and her own refinements to three lines. Every item below is now confirmed except Screen 13, '
+     'which stays parked. This document is not yet a build log; it records what’s approved to build.',
      italic=True, color=GREY)
 
 rule()
@@ -105,7 +114,7 @@ H('Part 1: Anu’s feedback on Oleksandra’s comments', 16, DARK, before=6, aft
 
 # ---------------- IMPORTANT CONSIDERATION ----------------
 rule()
-H('An important constraint to weigh before we proceed', 15, RED, before=8)
+H('An important constraint, and how it’s being resolved', 15, GOLD, before=8)
 p = doc.add_paragraph(); p.paragraph_format.space_after = Pt(6)
 p.add_run('The game has a hard design rule that’s been carefully maintained throughout: ').font.size = Pt(10.5)
 rb = p.add_run('no screen ever requires scrolling to read it'); rb.bold = True; rb.font.size = Pt(10.5)
@@ -116,16 +125,12 @@ para('If a learner can now select several options at once, and we show the reaso
      'every one they picked, that could be 3 to 5 paragraphs stacked in the same panel that used to hold one. '
      'On the two screens with the most options (belief, with 5 choices) and the busiest text (behaviour, '
      'with the new colour-coded outcomes Anu asked for), this could break the no-scroll rule on smaller phones.')
-para('Options worth deciding on:', before=4, bold=True)
-bullet('Show only the reasoning for the MOST RECENTLY selected option (simplest, least visual clutter, but a '
-       'learner might lose earlier reasoning they wanted to compare).')
-bullet('Show a short one-line outcome tag per selected option (not the full paragraph), with the full reasoning '
-       'only for the last one selected, as a middle ground.')
-bullet('Let the reasoning area scroll internally while the rest of the panel (question, options, Continue) '
-       'stays fixed. This would be the one place we’d deliberately break the "never scroll" rule, and '
-       'only in a small contained area.')
-para('This affects every screen below, so it’s flagged once here rather than repeated five times. Happy to '
-     'propose a specific approach once we’ve agreed a direction.', italic=True, color=GREY, before=4)
+tag('CONFIRMED: Anu, 28 September 2026', GREEN)
+para('Show a short one-line outcome tag per selected option, not the full paragraph, with the full reasoning '
+     'shown only for the last option selected. Keeps every screen readable without scrolling, while still '
+     'giving a learner a visible marker for everything they picked.', before=2)
+para('The other two options considered (showing only the most recent selection’s reasoning; or letting '
+     'just the reasoning area scroll internally) are not being used.', italic=True, color=GREY)
 
 # ==================== SCREEN 06 ====================
 rule()
@@ -141,15 +146,16 @@ bullet('Take tight control: "Family feels stifled."', level=1)
 bullet('Go quiet and pull away: "Impacts Orion’s own mental health."', level=1)
 bullet('Anger and blame: "The family can be hurt by it."', level=1)
 bullet('"Continue" is enabled once at least one option is selected.')
-tag('NEEDS A DECISION', RED)
+tag('CONFIRMED: Anu, 28 September 2026', GREEN)
 para('All three options currently reduce the tree’s health by a similar amount when picked alone '
-     '(around 18 to 20 points). If a learner selects two or three of them together, does the health penalty '
-     'stack (each one applies), or should it cap at the single worst option’s penalty? Stacking is more '
-     'realistic (more harmful choices means more harm) but could push the tree toward the "damaged" outcome '
-     'very quickly if someone selects all three just to read the feedback, which may not reflect what they’d '
-     'actually do. Recommend capping at the worst-selected option’s penalty, so exploring options out of '
-     'curiosity isn’t punished harder than committing to the single worst one. That said, this is a pedagogy '
-     'call, not a dev one.')
+     '(around 18 to 20 points). If a learner selects two or three of them together, the health penalty caps '
+     'at the single worst selected option, rather than stacking, so exploring options out of curiosity isn’t '
+     'punished harder than committing to the single worst one. This is the same logic confirmed for Screen 11 '
+     'below, applied the same way here.')
+para('Anu highlighted the risk with stacking specifically (that it could push the tree to "damaged" very '
+     'quickly just from exploring the options) rather than the capping recommendation itself. Reading that '
+     'alongside her explicit agreement to the identical logic on Screen 11, this is being treated as confirmed; '
+     'flagging the reasoning here in case that reading needs correcting.', italic=True, color=GREY)
 effort('Medium: new multi-select interaction, new copy (already supplied by Anu), one scoring decision.', GOLD)
 
 # ==================== SCREEN 08 ====================
@@ -176,13 +182,11 @@ bullet('Soil drop zone: already fixed and live (this was actioned in the round b
 bullet('Orion’s expression: after the FIRST healthy option is dropped, his expression shifts to visibly '
        'less sad. This is a new engine feature (his mood currently only follows the overall health score, not '
        'a live in-screen reaction to a single choice).')
-tag('NEEDS A DECISION', RED)
+tag('CONFIRMED: Anu, 28 September 2026', GREEN)
 para('Three of the four options here are healthy (plus 18 health each) and one is neutral ("I can stay in '
-     'charge", minus 2 health). If a learner selects a mix, say two healthy beliefs and the neutral one, how '
-     'should that combine? Recommend: any healthy selection counts as healthy overall (the neutral option only '
-     'applies if it’s the ONLY thing selected), so exploring doesn’t accidentally cancel out a good choice. '
-     'It’s the same underlying question as Screen 06, just in the opposite direction (mixing helps here, '
-     'hurts there).')
+     'charge", minus 2 health). If a learner selects a mix, say two healthy beliefs and the neutral one, any '
+     'healthy selection counts as healthy overall; the neutral option only applies if it’s the ONLY thing '
+     'selected, so exploring doesn’t accidentally cancel out a good choice. Explicitly agreed by Anu.')
 effort('Medium to Large: multi-select drag-and-drop (a new pattern, since the existing drag mechanic assumes a '
        'single selection), plus a new progressive-expression feature.', GOLD)
 
@@ -196,8 +200,9 @@ para('Proposed change:', bold=True, before=6)
 bullet('Multi-select drag-and-drop onto the trunk, same accumulating pattern as Screen 11.')
 bullet('A new immediate visual cue the moment a HEALTHY option is dropped, consistent with the soil-watering '
        'effect, applied to the trunk (e.g. a brief glow/strengthen pulse on the trunk).')
-para('Same scoring question as Screen 11 applies here too (two healthy options plus one neutral "keep control '
-     'but kinder").', italic=True, color=GREY)
+tag('CONFIRMED: same logic as Screen 11', GREEN)
+para('Same scoring question as Screen 11 (two healthy options plus one neutral "keep control but kinder"), '
+     'resolved the same way: any healthy pick counts as healthy overall.', italic=True, color=GREY)
 effort('Medium: same multi-select drag-and-drop pattern as Screen 11, plus one new visual cue (smaller than '
        'the expression feature).', GOLD)
 
@@ -212,13 +217,12 @@ bullet('This is a genuinely new mechanic, not a tweak: this screen currently jus
        'specific "family wellbeing" actions would a learner choose from?), wiring the engine to accept the '
        '"branches" area as a drop target, and a new visual: the branches visibly flourishing (extra leaves, '
        'colour, maybe early fruit) as it’s dropped.')
-tag('NEEDS CONTENT INPUT, NOT JUST A DEV DECISION', BLUE)
+tag('PARKED FOR NOW: Anu, 28 September 2026', BLUE)
 para('Anu’s idea is a strong direction, but we’d need two or three concrete option choices and their wording '
      'before this can be built, e.g. "spend time together," "really listen when they talk," "keep the promise '
-     'he made." Suggest this goes to the content/Edu side as its own small task, separate from the other four '
-     'screens (which are ready to build once the scoring questions above are settled).')
-effort('Large: a new mechanic end-to-end (content, drop-target wiring, new visual), and blocked on content '
-       'before any build work can start.', RED)
+     'he made." Anu has confirmed this is parked for now, as its own small content/Edu task, separate from the '
+     'other four screens (which are all confirmed and ready to build).')
+effort('Large: a new mechanic end-to-end (content, drop-target wiring, new visual). Not being built yet.', RED)
 
 # ==================== SCREEN 22 ====================
 rule()
@@ -245,32 +249,33 @@ para('Two structural suggestions, then shorter replacement wording for eleven sc
 H('1. Show 1800RESPECT / 000 on the last screen only', 13, GOLD, before=14)
 quote('Ali', 'The 1800RESPECT and 000 numbers to appear on the last screen only. The order to be 000 followed '
              'by 1800RESPECT.')
-tag('CONFLICTS WITH AN EXISTING SAFETY GUARDRAIL: NEEDS PVAW SIGN-OFF', RED)
-para('This isn’t a copy edit. It reverses a specific, documented pedagogy decision: "the 1800RESPECT / '
-     '000 support line shows on every screen," which is checked automatically on every content change '
-     '(the build fails if any screen is missing it). That rule exists so the support line is always visible '
-     'without a learner needing to reach the end of the activity. Removing it from every screen but the last '
-     'is a real safety-design change, not a text-density one, so this needs Anu/PVAW’s explicit '
-     'confirmation before it happens. It carries the same weight as the multi-select decision in Part 1, not '
-     'something to fold in quietly alongside the wording trims below.')
-para('If it does get confirmed, the reorder (000 before 1800RESPECT) is the easy part.', italic=True, color=GREY)
+tag('APPROVED BY PVAW: Anu, 28 September 2026', GREEN)
+para('This wasn’t a copy edit; it reverses a specific, documented pedagogy decision: "the 1800RESPECT / '
+     '000 support line shows on every screen," which was checked automatically on every content change '
+     '(the build previously failed if any screen was missing it). That rule existed so the support line was '
+     'always visible without a learner needing to reach the end of the activity. Anu has now explicitly '
+     'approved moving it to the last screen only, so this check will be updated to match rather than block it.')
+para('The reorder (000 before 1800RESPECT) is confirmed alongside it.', italic=True, color=GREY)
 
 # ---- structural suggestion 2: one screen title ----
 H('2. One screen title per screen, not several', 13, GOLD, before=14)
 quote('Ali', 'To have only one screen title to identify each screen (currently there are a couple of titles for '
              'each screen — example: "step 3 of 10" / "phase 1. what does he do?" / "the pressure is heavy, '
              'what does Orion do?")')
+tag('APPROVED: Anu, 28 September 2026', GREEN)
 para('Reading this as: keep the step-progress indicator (the dots plus "Step X of 10", since that’s '
      'orientation, not really a "title") and the actual question/heading, and drop the middle line (the '
-     '"Phase 1 · ..." tag), which mostly repeats what the heading already says. Worth confirming that’s '
-     'the intended reading before it’s applied everywhere, since it touches every single screen in the game.')
-effort('Small: a consistent CSS/markup change once the interpretation above is confirmed.', GREEN)
+     '"Phase 1 · ..." tag), which mostly repeats what the heading already says.')
+effort('Small: a consistent CSS/markup change.', GREEN)
 
 # ---- per-screen text trims ----
 H('3. Shorter wording, screen by screen', 13, GOLD, before=16)
+tag('APPROVED: Anu, 28 September 2026', GREEN)
 para('Ali’s versions are generally shorter and keep the core teaching point. A couple of specific '
      'personal-detail callbacks (e.g. "Since 2023..." on the tree screen) are dropped in the interest of '
-     'brevity, flagged where that happens; otherwise nothing substantive seems to be lost.', color=GREY, italic=True)
+     'brevity, flagged where that happens; otherwise nothing substantive seems to be lost. Anu refined the '
+     'ending of three of these herself; her final wording is shown under those three screens below and takes '
+     'precedence over Ali’s original draft for those lines.', color=GREY, italic=True)
 
 screen_heading('03', 'Money worries')
 current_vs_suggested(
@@ -299,6 +304,10 @@ current_vs_suggested(
     'Orion is facing challenges many new arrivals experience. Finding work is difficult, social connections '
     'are limited, and he feels he has lost the respect and status he once had. Unsure of what comes next, he '
     'has a choice to make.')
+approved_wording(
+    'Orion is facing challenges many new arrivals experience. Finding work is difficult, social connections '
+    'are limited, and he feels he has lost the respect and status he once had. Unsure of what comes next, he '
+    'has a choice about how he acts at home and outside.')
 
 screen_heading('06', 'The behaviour under pressure')
 current_vs_suggested(
@@ -323,9 +332,16 @@ current_vs_suggested(
     'choices shapes how we respond. Which one fits best? There is no wrong choice.',
     'Beliefs shape how we respond to pressure. The challenges are the same, but different beliefs can lead '
     'to different choices. Which one fits best? There is no wrong answer.')
+approved_wording(
+    'Beliefs shape how we respond to pressure. The challenges are the same, but different beliefs can lead '
+    'to different choices. Our choices can change the outcomes and impact those we care for.')
+para('Note: Anu’s version replaces the "no wrong choice" reassurance with a consequence-focused ending. '
+     'Flagging that it’s a small tone shift, not a compliance issue, since Anu owns the pedagogy tone; '
+     'happy to leave as is or add the reassurance back in elsewhere if that would be preferred.',
+     italic=True, color=GREY, before=2)
 para('Ali also flagged the heading itself, "What belief might sit behind this?", as reading better in the '
-     'plural ("What beliefs..."), since there are several to choose from. Worth a quick confirm since it’s '
-     'a matter of preference either way, not a correction.', italic=True, color=GREY, before=2)
+     'plural ("What beliefs..."), since there are several to choose from. Still worth a quick confirm.',
+     italic=True, color=GREY, before=2)
 
 screen_heading('09', 'The whole tree')
 current_vs_suggested(
@@ -357,6 +373,9 @@ current_vs_suggested(
     'difference. Positive change does not need big actions.',
     'Some things improved, while other challenges remained. Orion still held onto some control, but he was '
     'trying to change. Change is a journey, and even small steps can make a real difference.')
+approved_wording(
+    'Some things improved, while other challenges remained. Orion still held onto some control, but he was '
+    'trying to change. Change is a journey, and taking small steps allows you to begin making a difference.')
 
 screen_heading('20', 'What we learn')
 current_vs_suggested(
@@ -378,21 +397,21 @@ current_vs_suggested(
 
 # ---------------- NOT IN SCOPE / SEQUENCING ----------------
 rule()
-H('Suggested order to tackle all of this', 13, GOLD, before=14)
-bullet('Confirm the support-line placement with Anu/PVAW first: it’s the one item here with real safety '
-       'weight, alongside the multi-select decision from Part 1.')
-bullet('The screen-by-screen text trims (Part 2, section 3) are low-risk copy swaps and could be applied any '
-       'time once you’re happy with the wording; they don’t depend on any other decision.')
-bullet('The "one title per screen" change touches every screen’s layout, so worth doing in the same pass '
-       'as the text trims rather than separately.')
-bullet('Fold both into the same round of screen changes as the Part 1 items where they overlap (e.g. Screen '
-       '06’s intro line, Screen 07/13’s wording), rather than editing the same screen twice.')
+H('Status: everything below is confirmed', 13, GREEN, before=14)
+para('As of Anu’s reply on 28 September 2026, every open item above is resolved: the no-scroll approach, '
+     'both scoring questions, the support-line placement, the title consolidation, and the text trims '
+     '(including her own three refined endings). The only item not being built now is Screen 13’s new '
+     'branches drag-and-drop, which stays parked for a separate content-led follow-up.')
+para('Build order:', bold=True, before=6)
+bullet('One combined pass covering: the multi-select rebuild for Screens 06, 08, 11, 12 and 22; the '
+       'colour-coded outcomes on Screen 06; the progressive-expression feature on Screen 11; the support-line '
+       'placement change; the "one title per screen" layout change; and the text trims across all eleven '
+       'screens/lines, using Anu’s wording where she supplied it.')
+bullet('Screen 13’s branches drag-and-drop, once the content side has worked out the specific option '
+       'wording.')
 
 foot = doc.add_paragraph(); foot.paragraph_format.space_before = Pt(14)
-rf = foot.add_run('Once the support-line question and the two Part 1 scoring/design decisions are settled, '
-                   'everything else here (the text trims, the title consolidation, and the small/medium '
-                   'Part 1 screens) can be built together in one pass. Screen 13’s new branches '
-                   'drag-and-drop stays a separate, content-led follow-up.')
+rf = foot.add_run('Ready to start on the confirmed build.')
 rf.italic = True; rf.font.size = Pt(9.5); rf.font.color.rgb = GREY
 
 out = os.path.join(ROOT, 'docs', 'Shaping-Change-Proposed-Changes-Anu.docx')
