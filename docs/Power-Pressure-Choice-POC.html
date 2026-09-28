@@ -129,7 +129,6 @@ html, body {
   .gtitle { font-size: 19px; margin-bottom: 4px; }
   .gq { font-size: 17px; }
   .ghint { font-size: 13.5px; margin-bottom: 8px; }
-  .gtag { margin-bottom: 4px; }
   .gframing { font-size: 12px; padding-top: 7px; }
   .glegend { gap: 5px 14px; margin-bottom: 8px; }
   .gpills { gap: 7px; }
@@ -256,13 +255,6 @@ html, body {
 }
 .gtitle {
   font: italic 600 24px/1.2 Georgia, 'Times New Roman', serif;
-  margin: 0 0 6px;
-}
-.gtag {
-  font: 700 11px/1 Helvetica, Arial, sans-serif;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--gold);
   margin: 0 0 6px;
 }
 .ginfo {
@@ -425,7 +417,6 @@ html, body {
 .grow:active:not(:disabled) { transform: scale(0.97); }
 .grow:disabled { opacity: 0.35; cursor: default; }
 .gdone { text-align: center; padding: 6px 0 2px; }
-.gdone .gtag { display: inline-block; }
 .gdone-title {
   font: italic 600 22px/1.25 Georgia, 'Times New Roman', serif;
   margin: 0 0 6px;
@@ -459,7 +450,6 @@ html, body {
 .gdone.flourishing .gdone-title { color: var(--gold); }
 .gdone.recovering .gdone-title { color: #cbe0a8; }
 .gdone.withered .gdone-title { color: #c4cace; }
-.gdone.withered .gtag { color: #aeb6ba; }
 
 /* ---- interacting with the tree: discovery legend + drag-to-place ---- */
 .gexplore {
@@ -3393,7 +3383,8 @@ function createAudioEngine() {
    - The pressures (roots) and the impacts (branches) are never a "wrong answer".
    - Harmful behaviour never heals the tree; help-seeking always heals.
    - No outcome is caused by the pressure itself — outcomes follow the REBUILD choices.
-   - The 1800RESPECT / 000 support line shows on every screen. No shame language.
+   - The 1800RESPECT / 000 support line shows on the final screen only (changed from every
+     screen, approved by PVAW/Anu on 28 Sept 2026). No shame language.
    - The "Damaged" outcome is always reversible — it offers "Go back and rebuild".
 */
 
@@ -3424,7 +3415,7 @@ var STEPS = [
     id: 'pressure_money', think: 'money', type: 'story', phase: 'Pressure',
     tag: 'Phase 1 · The pressure builds',
     prompt: 'Money worries',
-    hint: 'Back home, Orion trained and worked as an engineer.\nHere, the doors keep closing: his overseas qualifications are not recognised, employers want local experience he has not had a chance to get, and he has few contacts to help him find work.\nThese barriers are common for new arrivals — they are not his fault. Orion is trying hard, but money is tight, and he worries every day.',
+    hint: 'Orion trained and worked as an engineer back home. Here, his qualifications are not recognised, employers want local experience, and he has few professional contacts. Work is hard to find, money is tight, and he worries every day.',
     btn: 'Continue',
     kind: 'neutral', fx: { health: -7 }, next: 'pressure_role'
   },
@@ -3433,7 +3424,7 @@ var STEPS = [
     id: 'pressure_role', think: 'family_role', type: 'story', phase: 'Pressure',
     tag: 'Phase 1 · The pressure builds',
     prompt: 'A changing role',
-    hint: 'His wife wants to study and find work. His children want to choose their own paths.\nHe no longer feels that his family members respect him or listen to him. He feels his role in the family is changing.\nHe feels unheard and unsure.',
+    hint: 'His wife wants to study and work, while his children want to choose their own paths. Orion feels his role in the family is changing. He feels unheard and uncertain.',
     btn: 'Continue',
     kind: 'neutral', fx: { health: -7 }, next: 'pressures_two'
   },
@@ -3444,7 +3435,7 @@ var STEPS = [
     id: 'pressures_two', think: 'pressures', type: 'story', phase: 'Pressure',
     tag: 'Phase 1 · Two big pressures',
     prompt: 'Two big pressures',
-    hint: 'Orion is facing two big pressures that many new arrivals know.\n\nOne is migration pressure — a new language, hard to find work, and few social connections.\nThe other is loss of status — back home he was respected and led others; here he can feel unseen, like starting from zero.\n\nThese pressures are not his fault, but they shape how he feels and acts. Orion is not sure where to go, and he has a choice to make.',
+    hint: 'Orion is facing challenges many new arrivals experience. Finding work is difficult, social connections are limited, and he feels he has lost the respect and status he once had. Unsure of what comes next, he has a choice about how he acts at home and outside.',
     btn: 'Continue',
     kind: 'neutral', fx: { health: -4 }, next: 'behaviour'
   },
@@ -3453,7 +3444,7 @@ var STEPS = [
     id: 'behaviour', think: 'pressures', type: 'pick', phase: 'Behaviour',
     tag: 'Phase 1 · What does he do?',
     prompt: 'The pressure is heavy. What does Orion do?',
-    hint: 'There is no perfect answer. These are realistic — but unhealthy — ways a person under stress can act. Choosing one does not make it right; seeing what it does to the family helps us understand, not judge.',
+    hint: 'People under stress do not always make healthy choices. Explore the consequences to understand, not judge.',
     btn: 'See what happens',
     options: [
       { label: 'Take tight control of the money and the decisions', kind: 'harmful', next: 'impact', fx: { mood: 'overcast', shed: 2, health: -18 }, info: 'Orion’s reasoning: he has always been the main decision-maker and believes leading the family is his job as a man. It is the one area of life where he still feels in control, and he believes he knows best how to manage the money.\nBut his family starts to feel unheard — understanding why does not make it okay.' },
@@ -3466,7 +3457,7 @@ var STEPS = [
     id: 'impact', think: 'family_sad', type: 'story', phase: 'Impact',
     tag: 'Phase 1 · The impact',
     prompt: 'Family experiences',
-    hint: 'His partner feels stressed and not heard. The children feel worried, grow quiet, and pull away.\nThis is a response to Orion’s behaviour — his own actions are shaping how his family feels. It is not their fault, and not the pressure itself.\nHe does not fully see it yet. But behaviour can be changed — and that is where the story can turn.',
+    hint: 'Orion’s partner feels unheard. The children are worried and pull away. His actions are affecting the family more than he realises. But change is still possible.',
     btn: 'Continue',
     kind: 'neutral', fx: { mood: 'overcast', shed: 2, health: -11 }, next: 'belief'
   },
@@ -3475,7 +3466,7 @@ var STEPS = [
     id: 'belief', type: 'pick', phase: 'Belief',
     tag: 'Phase 1 · The belief behind it',
     prompt: 'What belief might sit behind this?',
-    hint: 'Beliefs shape how we act under pressure. The pressures stay the same — but the belief behind our choices shapes how we respond. Which one fits best? There is no wrong choice.',
+    hint: 'Beliefs shape how we respond to pressure. The challenges are the same, but different beliefs can lead to different choices. Our choices can change the outcomes and impact those we care for.',
     btn: 'Reflect',
     options: [
       { label: '“As the father, it is my job to lead and decide.”', kind: 'neutral', next: 'root', fx: { health: 0 }, info: 'This belief can turn stress into a need for control over others.' },
@@ -3490,7 +3481,7 @@ var STEPS = [
     id: 'root', explore: true, type: 'story', phase: 'Root',
     tag: 'Phase 1 · The root cause',
     prompt: 'The whole tree',
-    hint: 'Deep down are two big pressures: migration stress and loss of status.\nSince 2023: a new language, no work, few connections. He was a leader; now he feels unseen.\n\nThink of a tree. The roots are life pressures. The soil is beliefs. The trunk is behaviour. The branches are the impact on family.\nOur values and beliefs shape how we think, which shapes how we act, which affects the people around us. To make change, we look at the whole tree. We can keep our values and show them in a healthier way — not just change the behaviour.',
+    hint: 'Orion is carrying two heavy challenges: adapting to a new life and losing the status he once had. Think of it like a tree: pressures are the roots, beliefs are the soil, actions are the trunk, and family impacts are the branches. Real change comes from understanding the whole tree and finding healthier ways to live our values.',
     btn: 'Now, help him rebuild',
     kind: 'neutral', fx: { mood: 'overcast', health: -4 }, next: 'rebuild_intro',
     showLegend: true
@@ -3530,7 +3521,7 @@ var STEPS = [
     options: [
       { label: 'Make the big decisions together with his wife, while still taking responsibility', kind: 'healthy', next: 'impact_good', fx: { health: 22 }, info: 'Shared power builds safety and trust. Respect is not control.' },
       { label: 'Ask for help — English classes, job support, counselling', kind: 'healthy', next: 'impact_good', fx: { health: 22 }, info: 'Asking for help is a strength, not a weakness.' },
-      { label: 'Keep control, but try to be kinder about it', kind: 'neutral', next: 'impact_good', fx: { health: -4 }, info: 'Kindness helps. But keeping all the power to himself does not really heal the tree. Sharing it does.' }
+      { label: 'Keep control, but try to be kinder about it', kind: 'neutral', next: 'impact_good', fx: { health: -4 }, info: 'Controlling the decisions in the family does not heal the tree even if he is kind.' }
     ]
   },
 
@@ -3538,7 +3529,7 @@ var STEPS = [
     id: 'impact_good', think: 'family_happy', type: 'story', phase: 'Rebuild',
     tag: 'Phase 2 · Branches · The impact',
     prompt: 'The family feels the change',
-    hint: 'When Orion shares power and asks for help, the family feels it.\nHis partner feels respected and can follow her goals.\nThe children feel safe and open up.\nOrion feels calmer and more confident, less alone — closer to his family, and less weighed down by stress.',
+    hint: 'When Orion shares decision making and asks for help, things begin to change. His partner feels respected. The children feel safe and open up. Orion feels calmer, more connected, and less alone.',
     btn: 'See the outcome',
     kind: 'healthy', fx: { mood: 'golden', health: 18 }, next: 'RESOLVE_OUTCOME'
   },
@@ -3557,7 +3548,7 @@ var STEPS = [
   {
     id: 'outcome_mixed', type: 'story', phase: 'Outcome', tone: 'mixed',
     tag: 'The outcome', prompt: 'A tree that is healing',
-    hint: 'Some things got better, and some strain remains.\nA few choices kept the power with Orion alone. But he is trying, and the tree is greener than before.\nChange is a journey — even small steps make a real difference. Positive change does not need big actions.',
+    hint: 'Some things improved, while other challenges remained. Orion still held onto some control, but he was trying to change. Change is a journey, and taking small steps allows you to begin making a difference.',
     btn: 'Key messages',
     kind: 'neutral', fx: { health: 0 }, next: 'takeaways',
     altBtn: 'Go back and rebuild', altNext: 'rebuild_intro',
@@ -3608,7 +3599,7 @@ var STEPS = [
   {
     id: 'takeaways', type: 'story', phase: 'Outcome',
     tag: 'Key takeaways', prompt: 'What we learn',
-    hint: 'By changing his beliefs, Orion can change his actions — and build a safe, respectful home.\n\nAsk yourself:\n🌱 Which belief is worth changing first?\n🌿 What helps most when the pressure is high?\n🌳 What does trust look like at home?\n🍎 What home do we want for our family?',
+    hint: 'Changing beliefs can lead to healthier choices and stronger relationships.\n\nTake a moment to reflect and ask yourself:\n🌱 Which belief is worth changing first?\n🌿 What helps most under pressure?\n🌳 What does trust look like at home?\n🍎 What kind of home do we want for our family?',
     btn: 'Why this matters',
     kind: 'neutral', fx: { health: 0 }, next: 'why_matters'
   },
@@ -3669,7 +3660,7 @@ var STEPS = [
 /* Progress backbone for the step dots. Every screen maps onto one of these phases. */
 var PHASE_ORDER = ['Meet', 'Pressure', 'Behaviour', 'Impact', 'Belief', 'Root', 'Rebuild', 'Outcome', 'Leadership', 'Support'];
 
-var SUPPORT_LINE = 'Need to talk? Call 1800RESPECT (1800 737 732). In an emergency, call 000.';
+var SUPPORT_LINE = 'In an emergency, call 000. Need to talk? Call 1800RESPECT (1800 737 732).';
 
 var KEY_MESSAGES = [
   'Behaviour is shaped by pressure and beliefs',
@@ -3729,7 +3720,7 @@ var UI_EN = {
   complete: 'Complete',
   stepOf: 'Step {n} of {total}',
   framing: 'This is about understanding patterns — not blaming people or cultures. A simple story, with real choices.',
-  supportLine: 'Need to talk? Call 1800RESPECT (1800 737 732). In an emergency, call 000.',
+  supportLine: 'In an emergency, call 000. Need to talk? Call 1800RESPECT (1800 737 732).',
   printPlan: 'Print or save my summary',
   keepsakeTitle: 'Shaping Change — my journey',
   keepsakeIntro: 'A summary of the choices I made and the plan I am taking home.',
@@ -3840,6 +3831,10 @@ function translateNode(node, lang) {
   var facilitator = /[?&]facilitator=1\b/.test(typeof location !== 'undefined' ? location.search : '');
   var BY_ID = {};
   STEPS.forEach(function (s) { BY_ID[s.id] = s; });
+  // screens where more than one option can genuinely resonate at once (confirmed with PVAW,
+  // 28 Sept 2026) — every option here leads to the same next node. Screen 06 ("behaviour")
+  // deliberately stays single-select — its multi-select is still pending a separate decision.
+  var MULTI_SELECT = { belief: true, attitude: true, behaviour_good: true };
 
   // opens on Orion's mature but strained tree (Phase 1), not a seed
   var INITIAL_FRAME = { id: 'welcome', stage: 5, health: 68, palette: 'spring', mood: 'noon', density: 1.2, wrongCount: 0 };
@@ -3948,7 +3943,7 @@ function translateNode(node, lang) {
 
   // ---------------- state ----------------
   var engine = createTreeEngine(canvas);
-  var audio = null, muted = false, picked, settled = true;
+  var audio = null, muted = false, picked = [], settled = true;
   var revealed = false, speaking = false;
   var ttsOK = (typeof window !== 'undefined' && 'speechSynthesis' in window);
   var game = FRESH();
@@ -4062,6 +4057,14 @@ function translateNode(node, lang) {
   canvas.addEventListener('pointerleave', function () {
     if (engine.setHighlight) engine.setHighlight(null);
   });
+  // select an option: multi-select screens accumulate picks (tap again to remove one);
+  // everywhere else a pick still replaces, exactly as before.
+  function togglePick(i) {
+    if (!MULTI_SELECT[curNode.id]) { picked = [i]; return; }
+    var at = picked.indexOf(i);
+    picked = at >= 0 ? picked.slice(0, at).concat(picked.slice(at + 1)) : picked.concat([i]);
+  }
+
   // drag an option onto the tree — clicking the card still works (accessibility)
   function startDrag(i, ev) {
     if (!curNode || !curNode.drop) return;
@@ -4090,7 +4093,8 @@ function translateNode(node, lang) {
       if (engine.setHighlight) engine.setHighlight(null);
       endDrag();
       if (dropped) {
-        picked = i;
+        if (MULTI_SELECT[curNode.id]) { if (picked.indexOf(i) < 0) picked = picked.concat([i]); }
+        else picked = [i];
         // only a genuinely HEALTHY choice waters the soil — a neutral pick still advances
         // the story, but shouldn't get the same positive reinforcement as a healthy one
         if (curNode.drop === 'soil' && curNode.options[i].kind === 'healthy' && engine.pulseWater) engine.pulseWater();
@@ -4169,7 +4173,37 @@ function translateNode(node, lang) {
 
     var frame = { id: nextId, stage: stage, health: health, palette: palette, mood: mood, density: density, wrongCount: wrongCount };
     game = { id: nextId, answers: answers, commitment: game.commitment, trail: game.trail.concat([frame]) };
-    save(); picked = undefined; render();
+    save(); picked = []; render();
+  }
+
+  // proceed from a pick screen with everything the learner selected. Single pick: unchanged.
+  // Multiple picks (multi-select screens only): every option here leads to the same next node,
+  // so any one supplies next/fx — but per PVAW, any healthy pick among them counts the whole
+  // answer as healthy (never diluted by also picking a neutral option alongside it).
+  function proceedPick(opts) {
+    if (opts.length <= 1) { choose(opts[0], picked[0]); return; }
+    var healthy = null;
+    for (var i = 0; i < opts.length; i++) { if (opts[i].kind === 'healthy') { healthy = opts[i]; break; } }
+    var rep = healthy || opts[0];
+    var merged = {};
+    for (var k in rep) merged[k] = rep[k];
+    merged.label = opts.map(function (o) { return o.label; }).join(' & ');
+    choose(merged, picked[picked.length - 1]);
+  }
+
+  // pledge chips ADD to the commitment instead of replacing it, so a learner can build
+  // "I will X and Y" rather than being limited to one suggestion (confirmed with PVAW).
+  function chipCore(s) { return s.replace(/^This month, I will /i, '').replace(/\.\s*$/, '').trim(); }
+  function addCommitmentChip(s) {
+    var core = chipCore(s);
+    var cur = game.commitment;
+    if (cur.toLowerCase().indexOf(core.toLowerCase()) >= 0) return; // already there
+    var trimmed = cur.trim();
+    var merged = !trimmed ? s
+      : /^this month, i will\b/i.test(trimmed) ? trimmed.replace(/\.\s*$/, '') + ' and ' + core
+        : trimmed + ' ' + s;
+    game.commitment = merged.slice(0, 160);
+    save();
   }
 
   // a 'story' screen advances via its own next pointer, reusing choose() (no answer logged)
@@ -4190,7 +4224,7 @@ function translateNode(node, lang) {
     var answers = (prevNode && prevNode.type === 'pick' && game.answers.length) ? game.answers.slice(0, -1) : game.answers;
     applyFrame(prev, true);
     game = { id: prev.id, answers: answers, commitment: game.commitment, trail: newTrail };
-    save(); picked = undefined; render();
+    save(); picked = []; render();
   }
 
   function goBackTo(targetId) {
@@ -4204,7 +4238,7 @@ function translateNode(node, lang) {
     var answers = pi >= 0 ? game.answers.slice(0, pi) : game.answers;
     applyFrame(frame, true);
     game = { id: targetId, answers: answers, commitment: game.commitment, trail: newTrail };
-    save(); picked = undefined; render();
+    save(); picked = []; render();
   }
 
   function restart() {
@@ -4213,7 +4247,7 @@ function translateNode(node, lang) {
     applyFrame(INITIAL_FRAME, true);
     if (engine.wave && !reducedMotion()) engine.wave();
     engine.renderNow();
-    save(); picked = undefined; render();
+    save(); picked = []; render();
   }
 
   function onEndingNav(option) {
@@ -4299,7 +4333,6 @@ function translateNode(node, lang) {
             : '<button class="greveal" data-act="reveal" type="button">' + esc(view.reveal.btn) + '</button>')
         : '';
       html += '<div>' +
-        '<p class="gtag">' + esc(view.tag) + '</p>' +
         '<h1 class="gq">' + esc(view.prompt) + '</h1>' +
         '<p class="ghint">' + escText(view.hint) + '</p>' +
         revealHTML +
@@ -4313,12 +4346,12 @@ function translateNode(node, lang) {
       '</div>';
     } else if (current.type === 'pick') {
       var pills = view.options.map(function (opt, i) {
-        return '<button type="button" class="pill' + (picked === i ? ' sel' : '') + (current.drop ? ' draggable' : '') + '" data-act="pick" data-i="' + i + '" aria-pressed="' + (picked === i ? 'true' : 'false') + '">' + esc(opt.label) + '</button>';
+        var sel = picked.indexOf(i) >= 0;
+        return '<button type="button" class="pill' + (sel ? ' sel' : '') + (current.drop ? ' draggable' : '') + '" data-act="pick" data-i="' + i + '" aria-pressed="' + (sel ? 'true' : 'false') + '">' + esc(opt.label) + '</button>';
       }).join('');
-      var info = picked !== undefined ? view.options[picked].info : ' ';
-      var ready = picked !== undefined;
+      var info = picked.length ? view.options[picked[picked.length - 1]].info : ' ';
+      var ready = picked.length > 0;
       html += '<div>' +
-        '<p class="gtag">' + esc(view.tag) + '</p>' +
         '<h1 class="gq">' + esc(view.prompt) + '</h1>' +
         '<p class="ghint">' + esc(view.hint) + '</p>' +
         (current.drop ? '<p class="gexplore">Drag a card onto the ' + (current.drop === 'soil' ? 'soil' : 'trunk') + ' — or just tap to choose.</p>' : '') +
@@ -4335,7 +4368,6 @@ function translateNode(node, lang) {
       }).join('');
       var rdy = game.commitment.trim().length > 0;
       html += '<div>' +
-        '<p class="gtag">' + esc(view.tag) + '</p>' +
         '<h1 class="gq">' + esc(view.prompt) + '</h1>' +
         '<p class="ghint">' + esc(view.hint) + '</p>' +
         '<textarea class="gcommit" rows="2" maxlength="160" placeholder="This month, I will…">' + esc(game.commitment) + '</textarea>' +
@@ -4356,7 +4388,6 @@ function translateNode(node, lang) {
         return '<li><a href="' + esc(st.url) + '" target="_blank" rel="noopener noreferrer">' + esc(st.label) + '</a></li>';
       }).join('') + '</ul>' : '';
       html += '<div class="gdone ' + esc(current.endingTone || '') + '">' +
-        '<p class="gtag">' + esc(view.tag) + '</p>' +
         '<h1 class="gdone-title">' + esc(view.prompt) + '</h1>' +
         '<p class="ghint" style="margin-bottom:' + (view.steps ? '4' : '10') + 'px">' + escText(view.hint) + '</p>' +
         stepsHTML +
@@ -4367,7 +4398,7 @@ function translateNode(node, lang) {
       '</div>';
     }
 
-    html += '<p class="gsupport">' + esc(SUPPORT_LINE) + '</p>';
+    if (isEnding) html += '<p class="gsupport">' + esc(SUPPORT_LINE) + '</p>';
     // the welcome screen is a centred landing card with the tree hidden (see .landing CSS)
     var isLanding = current.id === 'welcome';
     panel.className = 'panel' + (isLanding ? ' landing' : '');
@@ -4445,7 +4476,7 @@ function translateNode(node, lang) {
       else if (act === 'restart') el.onclick = restart;
       else if (act === 'intro') el.onclick = function () { choose(view.options[0], 0); };
       else if (act === 'pick') {
-        el.onclick = function () { picked = +el.getAttribute('data-i'); render(); };
+        el.onclick = function () { togglePick(+el.getAttribute('data-i')); render(); };
         if (current.drop) el.onpointerdown = function (ev) { startDrag(+el.getAttribute('data-i'), ev); };
       }
       else if (act === 'legend') {
@@ -4455,14 +4486,14 @@ function translateNode(node, lang) {
         el.onmouseenter = hi; el.onmouseleave = lo;
         el.onfocus = hi; el.onblur = lo;   // keyboard parity with hover
       }
-      else if (act === 'choose') el.onclick = function () { if (picked !== undefined) choose(view.options[picked], picked); };
+      else if (act === 'choose') el.onclick = function () { if (picked.length) proceedPick(picked.map(function (i) { return view.options[i]; })); };
       else if (act === 'story') el.onclick = function () { advanceStory(current, false); };
       else if (act === 'storyalt') el.onclick = function () { advanceStory(current, true); };
       else if (act === 'back') el.onclick = goBack;
       else if (act === 'commit') el.onclick = function () { choose(view.options[0], 0); };
       else if (act === 'endnav') el.onclick = function () { onEndingNav(current.options[+el.getAttribute('data-i')]); };
       else if (act === 'chip') el.onclick = function () {
-        game.commitment = el.getAttribute('data-v'); save(); render();
+        addCommitmentChip(el.getAttribute('data-v')); render();
       };
     });
 
@@ -4567,7 +4598,7 @@ function translateNode(node, lang) {
       var btn = panel.querySelector('[data-act="choose"],[data-act="intro"],[data-act="commit"],[data-act="story"]');
       if (btn) {
         var cur = BY_ID[game.id];
-        var ready = cur.type === 'pick' ? picked !== undefined
+        var ready = cur.type === 'pick' ? picked.length > 0
           : cur.type === 'commit' ? game.commitment.trim().length > 0 : true;
         var lockHeld = lockLeft > 0 && (cur.type === 'story' || cur.type === 'intro');
         btn.disabled = !ready || !settled || lockHeld;

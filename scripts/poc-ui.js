@@ -11,6 +11,10 @@
   var facilitator = /[?&]facilitator=1\b/.test(typeof location !== 'undefined' ? location.search : '');
   var BY_ID = {};
   STEPS.forEach(function (s) { BY_ID[s.id] = s; });
+  // screens where more than one option can genuinely resonate at once (confirmed with PVAW,
+  // 28 Sept 2026) — every option here leads to the same next node. Screen 06 ("behaviour")
+  // deliberately stays single-select — its multi-select is still pending a separate decision.
+  var MULTI_SELECT = { belief: true, attitude: true, behaviour_good: true };
 
   // opens on Orion's mature but strained tree (Phase 1), not a seed
   var INITIAL_FRAME = { id: 'welcome', stage: 5, health: 68, palette: 'spring', mood: 'noon', density: 1.2, wrongCount: 0 };
@@ -119,7 +123,7 @@
 
   // ---------------- state ----------------
   var engine = createTreeEngine(canvas);
-  var audio = null, muted = false, picked, settled = true;
+  var audio = null, muted = false, picked = [], settled = true;
   var revealed = false, speaking = false;
   var ttsOK = (typeof window !== 'undefined' && 'speechSynthesis' in window);
   var game = FRESH();
@@ -233,6 +237,14 @@
   canvas.addEventListener('pointerleave', function () {
     if (engine.setHighlight) engine.setHighlight(null);
   });
+  // select an option: multi-select screens accumulate picks (tap again to remove one);
+  // everywhere else a pick still replaces, exactly as before.
+  function togglePick(i) {
+    if (!MULTI_SELECT[curNode.id]) { picked = [i]; return; }
+    var at = picked.indexOf(i);
+    picked = at >= 0 ? picked.slice(0, at).concat(picked.slice(at + 1)) : picked.concat([i]);
+  }
+
   // drag an option onto the tree — clicking the card still works (accessibility)
   function startDrag(i, ev) {
     if (!curNode || !curNode.drop) return;
@@ -261,7 +273,8 @@
       if (engine.setHighlight) engine.setHighlight(null);
       endDrag();
       if (dropped) {
-        picked = i;
+        if (MULTI_SELECT[curNode.id]) { if (picked.indexOf(i) < 0) picked = picked.concat([i]); }
+        else picked = [i];
         // only a genuinely HEALTHY choice waters the soil — a neutral pick still advances
         // the story, but shouldn't get the same positive reinforcement as a healthy one
         if (curNode.drop === 'soil' && curNode.options[i].kind === 'healthy' && engine.pulseWater) engine.pulseWater();
@@ -340,7 +353,37 @@
 
     var frame = { id: nextId, stage: stage, health: health, palette: palette, mood: mood, density: density, wrongCount: wrongCount };
     game = { id: nextId, answers: answers, commitment: game.commitment, trail: game.trail.concat([frame]) };
-    save(); picked = undefined; render();
+    save(); picked = []; render();
+  }
+
+  // proceed from a pick screen with everything the learner selected. Single pick: unchanged.
+  // Multiple picks (multi-select screens only): every option here leads to the same next node,
+  // so any one supplies next/fx — but per PVAW, any healthy pick among them counts the whole
+  // answer as healthy (never diluted by also picking a neutral option alongside it).
+  function proceedPick(opts) {
+    if (opts.length <= 1) { choose(opts[0], picked[0]); return; }
+    var healthy = null;
+    for (var i = 0; i < opts.length; i++) { if (opts[i].kind === 'healthy') { healthy = opts[i]; break; } }
+    var rep = healthy || opts[0];
+    var merged = {};
+    for (var k in rep) merged[k] = rep[k];
+    merged.label = opts.map(function (o) { return o.label; }).join(' & ');
+    choose(merged, picked[picked.length - 1]);
+  }
+
+  // pledge chips ADD to the commitment instead of replacing it, so a learner can build
+  // "I will X and Y" rather than being limited to one suggestion (confirmed with PVAW).
+  function chipCore(s) { return s.replace(/^This month, I will /i, '').replace(/\.\s*$/, '').trim(); }
+  function addCommitmentChip(s) {
+    var core = chipCore(s);
+    var cur = game.commitment;
+    if (cur.toLowerCase().indexOf(core.toLowerCase()) >= 0) return; // already there
+    var trimmed = cur.trim();
+    var merged = !trimmed ? s
+      : /^this month, i will\b/i.test(trimmed) ? trimmed.replace(/\.\s*$/, '') + ' and ' + core
+        : trimmed + ' ' + s;
+    game.commitment = merged.slice(0, 160);
+    save();
   }
 
   // a 'story' screen advances via its own next pointer, reusing choose() (no answer logged)
@@ -361,7 +404,7 @@
     var answers = (prevNode && prevNode.type === 'pick' && game.answers.length) ? game.answers.slice(0, -1) : game.answers;
     applyFrame(prev, true);
     game = { id: prev.id, answers: answers, commitment: game.commitment, trail: newTrail };
-    save(); picked = undefined; render();
+    save(); picked = []; render();
   }
 
   function goBackTo(targetId) {
@@ -375,7 +418,7 @@
     var answers = pi >= 0 ? game.answers.slice(0, pi) : game.answers;
     applyFrame(frame, true);
     game = { id: targetId, answers: answers, commitment: game.commitment, trail: newTrail };
-    save(); picked = undefined; render();
+    save(); picked = []; render();
   }
 
   function restart() {
@@ -384,7 +427,7 @@
     applyFrame(INITIAL_FRAME, true);
     if (engine.wave && !reducedMotion()) engine.wave();
     engine.renderNow();
-    save(); picked = undefined; render();
+    save(); picked = []; render();
   }
 
   function onEndingNav(option) {
@@ -470,7 +513,6 @@
             : '<button class="greveal" data-act="reveal" type="button">' + esc(view.reveal.btn) + '</button>')
         : '';
       html += '<div>' +
-        '<p class="gtag">' + esc(view.tag) + '</p>' +
         '<h1 class="gq">' + esc(view.prompt) + '</h1>' +
         '<p class="ghint">' + escText(view.hint) + '</p>' +
         revealHTML +
@@ -484,12 +526,12 @@
       '</div>';
     } else if (current.type === 'pick') {
       var pills = view.options.map(function (opt, i) {
-        return '<button type="button" class="pill' + (picked === i ? ' sel' : '') + (current.drop ? ' draggable' : '') + '" data-act="pick" data-i="' + i + '" aria-pressed="' + (picked === i ? 'true' : 'false') + '">' + esc(opt.label) + '</button>';
+        var sel = picked.indexOf(i) >= 0;
+        return '<button type="button" class="pill' + (sel ? ' sel' : '') + (current.drop ? ' draggable' : '') + '" data-act="pick" data-i="' + i + '" aria-pressed="' + (sel ? 'true' : 'false') + '">' + esc(opt.label) + '</button>';
       }).join('');
-      var info = picked !== undefined ? view.options[picked].info : ' ';
-      var ready = picked !== undefined;
+      var info = picked.length ? view.options[picked[picked.length - 1]].info : ' ';
+      var ready = picked.length > 0;
       html += '<div>' +
-        '<p class="gtag">' + esc(view.tag) + '</p>' +
         '<h1 class="gq">' + esc(view.prompt) + '</h1>' +
         '<p class="ghint">' + esc(view.hint) + '</p>' +
         (current.drop ? '<p class="gexplore">Drag a card onto the ' + (current.drop === 'soil' ? 'soil' : 'trunk') + ' — or just tap to choose.</p>' : '') +
@@ -506,7 +548,6 @@
       }).join('');
       var rdy = game.commitment.trim().length > 0;
       html += '<div>' +
-        '<p class="gtag">' + esc(view.tag) + '</p>' +
         '<h1 class="gq">' + esc(view.prompt) + '</h1>' +
         '<p class="ghint">' + esc(view.hint) + '</p>' +
         '<textarea class="gcommit" rows="2" maxlength="160" placeholder="This month, I will…">' + esc(game.commitment) + '</textarea>' +
@@ -527,7 +568,6 @@
         return '<li><a href="' + esc(st.url) + '" target="_blank" rel="noopener noreferrer">' + esc(st.label) + '</a></li>';
       }).join('') + '</ul>' : '';
       html += '<div class="gdone ' + esc(current.endingTone || '') + '">' +
-        '<p class="gtag">' + esc(view.tag) + '</p>' +
         '<h1 class="gdone-title">' + esc(view.prompt) + '</h1>' +
         '<p class="ghint" style="margin-bottom:' + (view.steps ? '4' : '10') + 'px">' + escText(view.hint) + '</p>' +
         stepsHTML +
@@ -538,7 +578,7 @@
       '</div>';
     }
 
-    html += '<p class="gsupport">' + esc(SUPPORT_LINE) + '</p>';
+    if (isEnding) html += '<p class="gsupport">' + esc(SUPPORT_LINE) + '</p>';
     // the welcome screen is a centred landing card with the tree hidden (see .landing CSS)
     var isLanding = current.id === 'welcome';
     panel.className = 'panel' + (isLanding ? ' landing' : '');
@@ -616,7 +656,7 @@
       else if (act === 'restart') el.onclick = restart;
       else if (act === 'intro') el.onclick = function () { choose(view.options[0], 0); };
       else if (act === 'pick') {
-        el.onclick = function () { picked = +el.getAttribute('data-i'); render(); };
+        el.onclick = function () { togglePick(+el.getAttribute('data-i')); render(); };
         if (current.drop) el.onpointerdown = function (ev) { startDrag(+el.getAttribute('data-i'), ev); };
       }
       else if (act === 'legend') {
@@ -626,14 +666,14 @@
         el.onmouseenter = hi; el.onmouseleave = lo;
         el.onfocus = hi; el.onblur = lo;   // keyboard parity with hover
       }
-      else if (act === 'choose') el.onclick = function () { if (picked !== undefined) choose(view.options[picked], picked); };
+      else if (act === 'choose') el.onclick = function () { if (picked.length) proceedPick(picked.map(function (i) { return view.options[i]; })); };
       else if (act === 'story') el.onclick = function () { advanceStory(current, false); };
       else if (act === 'storyalt') el.onclick = function () { advanceStory(current, true); };
       else if (act === 'back') el.onclick = goBack;
       else if (act === 'commit') el.onclick = function () { choose(view.options[0], 0); };
       else if (act === 'endnav') el.onclick = function () { onEndingNav(current.options[+el.getAttribute('data-i')]); };
       else if (act === 'chip') el.onclick = function () {
-        game.commitment = el.getAttribute('data-v'); save(); render();
+        addCommitmentChip(el.getAttribute('data-v')); render();
       };
     });
 
@@ -738,7 +778,7 @@
       var btn = panel.querySelector('[data-act="choose"],[data-act="intro"],[data-act="commit"],[data-act="story"]');
       if (btn) {
         var cur = BY_ID[game.id];
-        var ready = cur.type === 'pick' ? picked !== undefined
+        var ready = cur.type === 'pick' ? picked.length > 0
           : cur.type === 'commit' ? game.commitment.trim().length > 0 : true;
         var lockHeld = lockLeft > 0 && (cur.type === 'story' || cur.type === 'intro');
         btn.disabled = !ready || !settled || lockHeld;

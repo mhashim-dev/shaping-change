@@ -61,7 +61,7 @@ function panelHTML(id, o) {
     const altBtn = cur.altNext ? '<button class="gback" type="button">' + esc(cur.altBtn) + '</button>' : '';
     // "Show the numbers" statistics — shown revealed in the mock so reviewers see the cited content
     const revealBlock = cur.reveal ? '<p class="ghint" style="margin-top:2px">' + escText(cur.reveal.text) + '</p>' : '';
-    h += '<div><p class="gtag">' + esc(cur.tag) + '</p><h1 class="gq">' + esc(cur.prompt) + '</h1>' +
+    h += '<div><h1 class="gq">' + esc(cur.prompt) + '</h1>' +
       '<p class="ghint">' + escText(cur.hint) + '</p>' + revealBlock + legend2 +
       '<div class="panel-foot"><button class="gback" type="button" style="visibility:' + ((o.trailLen || 1) > 1 ? 'visible' : 'hidden') + '">&#8592; Previous step</button>' +
       '<div style="display:flex;gap:10px;align-items:center">' + altBtn + '<button class="grow" type="button">' + esc(cur.btn) + '</button></div></div></div>';
@@ -69,7 +69,7 @@ function panelHTML(id, o) {
     const pills = cur.options.map((opt, i) =>
       '<button type="button" class="pill' + (o.picked === i ? ' sel' : '') + '">' + esc(opt.label) + '</button>').join('');
     const info = (typeof o.picked === 'number') ? cur.options[o.picked].info : ' ';
-    h += '<div><p class="gtag">' + esc(cur.tag) + '</p><h1 class="gq">' + esc(cur.prompt) + '</h1>' +
+    h += '<div><h1 class="gq">' + esc(cur.prompt) + '</h1>' +
       '<p class="ghint">' + esc(cur.hint) + '</p>' +
       (cur.drop ? '<p class="gexplore">Drag a card onto the ' + (cur.drop === 'soil' ? 'soil' : 'trunk') + ' — or just tap to choose.</p>' : '') +
       '<div class="gpills">' + pills + '</div>' +
@@ -78,7 +78,7 @@ function panelHTML(id, o) {
       '<button class="grow" type="button">' + esc(cur.btn) + '</button></div></div>';
   } else if (cur.type === 'commit') {
     const chips = (cur.suggestions || []).map(s => '<button type="button" class="chip">' + esc(s) + '</button>').join('');
-    h += '<div><p class="gtag">' + esc(cur.tag) + '</p><h1 class="gq">' + esc(cur.prompt) + '</h1>' +
+    h += '<div><h1 class="gq">' + esc(cur.prompt) + '</h1>' +
       '<p class="ghint">' + esc(cur.hint) + '</p>' +
       '<textarea class="gcommit" rows="2">' + esc(o.commitment || '') + '</textarea>' +
       '<div class="gchips">' + chips + '</div>' +
@@ -91,14 +91,14 @@ function panelHTML(id, o) {
     actions += '<button type="button" class="gkeepsake-btn">🖨️ Print or save my plan</button>';
     const stepsHTML = cur.steps ? '<ul class="gsteps">' + cur.steps.map(st =>
       '<li><a href="' + esc(st.url) + '" target="_blank" rel="noopener noreferrer">' + esc(st.label) + '</a></li>').join('') + '</ul>' : '';
-    h += '<div class="gdone ' + esc(cur.endingTone || '') + '"><p class="gtag">' + esc(cur.tag) + '</p>' +
+    h += '<div class="gdone ' + esc(cur.endingTone || '') + '">' +
       '<h1 class="gdone-title">' + esc(cur.prompt) + '</h1>' +
       '<p class="ghint" style="margin-bottom:' + (cur.steps ? '4' : '10') + 'px">' + escText(cur.hint) + '</p>' + stepsHTML +
       (recap.length ? '<p class="grecap">' + recap.join('  &rarr;  ') + '</p>' : '') +
       (o.commitment ? '<p class="gcommit-echo">&ldquo;' + esc(o.commitment) + '&rdquo;</p>' : '') +
       '<div class="gkeys">' + keys + '</div><div class="gend-actions">' + actions + '</div></div>';
   }
-  h += '<p class="gsupport">' + esc(SUPPORT_LINE) + '</p>';
+  if (isEnding) h += '<p class="gsupport">' + esc(SUPPORT_LINE) + '</p>';
   return h;
 }
 

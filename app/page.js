@@ -13,6 +13,12 @@ const COACH_KEY = 'ppc-coach-v1';   // first-time "the tree is interactive" nudg
 const EVAL_KEY = 'ppc-eval-v1';     // optional before/after self-rating (local only)
 const FACES = ['😟', '🙁', '😐', '🙂', '😃'];
 const BY_ID = STEPS.reduce((m, s) => { m[s.id] = s; return m; }, {});
+// screens where more than one option can genuinely resonate at once (confirmed with PVAW,
+// 28 Sept 2026) — every option here leads to the same next node, so letting a learner pick
+// several removes an artificial single-choice barrier without changing the branching graph.
+// Screen 06 ("behaviour") deliberately stays single-select — its multi-select + colour-coded
+// outcomes are still pending a separate PVAW decision.
+const MULTI_SELECT = new Set(['belief', 'attitude', 'behaviour_good']);
 
 // engine state captured at ENTRY to each visited node — drives back navigation.
 // The story opens on Orion's mature but strained tree (Phase 1), not a seed.
@@ -111,7 +117,7 @@ export default function Home() {
   const panelRef = useRef(null);
   const audioRef = useRef(null);
   const [game, setGame] = useState(FRESH);
-  const [picked, setPicked] = useState(undefined);
+  const [picked, setPicked] = useState([]);
   const [settled, setSettled] = useState(true);
   const [sideWidth, setSideWidth] = useState(372);
   const [muted, setMuted] = useState(false);
@@ -253,7 +259,7 @@ export default function Home() {
     if (engine.setThought) engine.setThought(n0.think);
     engine.renderNow();
     setGame(g);
-    setPicked(undefined);
+    setPicked([]);
   };
 
   useEffect(() => {
@@ -312,6 +318,15 @@ export default function Home() {
     if (type === 'down' && part) discover(part);
   };
 
+  // select an option: multi-select screens accumulate picks (tap again to remove one);
+  // everywhere else a pick still replaces, exactly as before.
+  const togglePick = (i) => {
+    setPicked((p) => {
+      if (!MULTI_SELECT.has(current.id)) return [i];
+      return p.includes(i) ? p.filter((x) => x !== i) : [...p, i];
+    });
+  };
+
   // drag an option onto the tree (soil / trunk). Clicking a pill still works — the drag
   // is an enhancement, never the only route (keyboard + tap must keep working, WCAG AA).
   const startDrag = (i, ev) => {
@@ -337,7 +352,7 @@ export default function Home() {
       setHL(null);
       setDragUI(null);
       if (dropped) {
-        setPicked(i);
+        setPicked((p) => (MULTI_SELECT.has(current.id) ? (p.includes(i) ? p : [...p, i]) : [i]));
         const e2 = engineRef.current;
         // only a genuinely HEALTHY choice waters the soil — a neutral pick still advances
         // the story, but shouldn't get the same positive reinforcement as a healthy one
@@ -433,7 +448,18 @@ export default function Home() {
 
     const frame = { id: nextId, stage, health, palette, mood, density, wrongCount };
     const g = { id: nextId, answers, commitment: game.commitment, trail: [...game.trail, frame] };
-    setGame(g); save(g); setPicked(undefined);
+    setGame(g); save(g); setPicked([]);
+  };
+
+  // proceed from a pick screen with everything the learner selected. Single pick: unchanged.
+  // Multiple picks (multi-select screens only): every option here leads to the same next node,
+  // so any one of them supplies next/fx — but per PVAW, any healthy pick among them counts the
+  // whole answer as healthy (it's never diluted by also picking a neutral option alongside it).
+  const proceedPick = (opts) => {
+    if (opts.length <= 1) { choose(opts[0], picked[0]); return; }
+    const healthy = opts.find((o) => o.kind === 'healthy');
+    const rep = healthy || opts[0];
+    choose({ ...rep, label: opts.map((o) => o.label).join(' & ') }, picked[picked.length - 1]);
   };
 
   // a 'story' screen (narrative / outcome) advances via its own next pointer,
@@ -458,7 +484,7 @@ export default function Home() {
     const engine = engineRef.current;
     if (engine) applyFrame(engine, prev, true);
     const g = { id: prev.id, answers, commitment: game.commitment, trail: newTrail };
-    setGame(g); save(g); setPicked(undefined);
+    setGame(g); save(g); setPicked([]);
   };
 
   // jump back to a named node (the withered ending's "choose again" → pivot)
@@ -473,14 +499,14 @@ export default function Home() {
     const engine = engineRef.current;
     if (engine) applyFrame(engine, frame, true);
     const g = { id: targetId, answers, commitment: game.commitment, trail: newTrail };
-    setGame(g); save(g); setPicked(undefined);
+    setGame(g); save(g); setPicked([]);
   };
 
   const restart = () => {
     const engine = engineRef.current;
     const g = FRESH();
     if (engine) { applyFrame(engine, INITIAL_FRAME, true); engine.renderNow(); }
-    setGame(g); save(g); setPicked(undefined);
+    setGame(g); save(g); setPicked([]);
   };
 
   const onEndingNav = (option) => {
@@ -493,6 +519,20 @@ export default function Home() {
     setGame(g); save(g);
   };
 
+  // pledge chips ADD to the commitment instead of replacing it, so a learner can build
+  // "I will X and Y" rather than being limited to one suggestion (confirmed with PVAW).
+  const chipCore = (s) => s.replace(/^This month, I will /i, '').replace(/\.\s*$/, '').trim();
+  const addCommitmentChip = (s) => {
+    const core = chipCore(s);
+    const cur = game.commitment;
+    if (cur.toLowerCase().includes(core.toLowerCase())) return; // already there
+    const trimmed = cur.trim();
+    const merged = !trimmed ? s
+      : /^this month, i will\b/i.test(trimmed) ? trimmed.replace(/\.\s*$/, '') + ' and ' + core
+        : trimmed + ' ' + s;
+    setCommitment(merged.slice(0, 160));
+  };
+
   // progress along the fixed phase backbone — stable across branches
   const phaseIndex = PHASE_ORDER.indexOf(current.phase);
   const isEnding = current.type === 'ending';
@@ -503,7 +543,7 @@ export default function Home() {
           : '';
 
   const ready =
-    current.type === 'pick' ? picked !== undefined
+    current.type === 'pick' ? picked.length > 0
       : current.type === 'commit' ? game.commitment.trim().length > 0
         : true;
 
@@ -603,7 +643,6 @@ export default function Home() {
 
         {current.type === 'story' && (
           <div>
-            <p className="gtag">{view.tag}</p>
             <h1 className="gq">{view.prompt}</h1>
             <p className="ghint">{renderText(view.hint)}</p>
             {current.reveal && (revealed
@@ -666,7 +705,6 @@ export default function Home() {
 
         {current.type === 'pick' && (
           <div>
-            <p className="gtag">{view.tag}</p>
             <h1 className="gq">{view.prompt}</h1>
             <p className="ghint">{view.hint}</p>
             {current.drop && (
@@ -679,16 +717,16 @@ export default function Home() {
                 <button
                   key={opt.label}
                   type="button"
-                  className={'pill' + (picked === i ? ' sel' : '') + (current.drop ? ' draggable' : '')}
-                  aria-pressed={picked === i}
+                  className={'pill' + (picked.includes(i) ? ' sel' : '') + (current.drop ? ' draggable' : '')}
+                  aria-pressed={picked.includes(i)}
                   onPointerDown={(ev) => startDrag(i, ev)}
-                  onClick={() => setPicked(i)}
+                  onClick={() => togglePick(i)}
                 >
                   {opt.label}
                 </button>
               ))}
             </div>
-            <p className="ginfo">{picked !== undefined ? view.options[picked].info : ' '}</p>
+            <p className="ginfo">{picked.length ? view.options[picked[picked.length - 1]].info : ' '}</p>
             <div className="panel-foot">
               <button
                 className="gback"
@@ -702,7 +740,7 @@ export default function Home() {
                 className="grow"
                 type="button"
                 disabled={!ready || !settled}
-                onClick={() => choose(view.options[picked], picked)}
+                onClick={() => proceedPick(picked.map((i) => view.options[i]))}
               >
                 {view.btn}
               </button>
@@ -712,7 +750,6 @@ export default function Home() {
 
         {current.type === 'commit' && (
           <div>
-            <p className="gtag">{current.tag}</p>
             <h1 className="gq">{current.prompt}</h1>
             <p className="ghint">{current.hint}</p>
             <textarea
@@ -725,7 +762,7 @@ export default function Home() {
             ></textarea>
             <div className="gchips">
               {(current.suggestions || []).map((s) => (
-                <button key={s} type="button" className="chip" onClick={() => setCommitment(s)}>
+                <button key={s} type="button" className="chip" onClick={() => addCommitmentChip(s)}>
                   {s}
                 </button>
               ))}
@@ -746,7 +783,6 @@ export default function Home() {
 
         {isEnding && (
           <div className={'gdone ' + (current.endingTone || '')}>
-            <p className="gtag">{view.tag}</p>
             <h1 className="gdone-title">{view.prompt}</h1>
             <p className="ghint" style={{ marginBottom: view.steps ? 4 : 10 }}>{renderText(view.hint)}</p>
             {view.steps && (
@@ -782,7 +818,7 @@ export default function Home() {
           </div>
         )}
 
-        <p className="gsupport">{SUPPORT_LINE}</p>
+        {isEnding && <p className="gsupport">{SUPPORT_LINE}</p>}
       </section>
 
       {isEnding && (() => {
