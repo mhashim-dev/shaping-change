@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { createTreeEngine } from '@/lib/tree-engine';
+import { createTreeEngine, SCENE_ANCHOR_X } from '@/lib/tree-engine';
 
 export default function TreeStage({ onEngine, getReserve, sideWidth = 0, landing = false, apiRef, onCanvasPointer, ariaLabel }) {
   const stageRef = useRef(null);
@@ -54,7 +54,12 @@ export default function TreeStage({ onEngine, getReserve, sideWidth = 0, landing
         // the scene fills the whole window (team feedback); the panel floats top-right over it.
         // The centred landing card also wants a full-bleed backdrop, even on mobile (sw === 0).
         const s = Math.max(window.innerWidth / 1600, window.innerHeight / 900);
-        el.style.left = '50%';
+        // on landing there's no side panel to dodge, so crop around where the tree actually
+        // sits (SCENE_ANCHOR_X, left of the scene's raw 800 centre) rather than raw centre —
+        // on a narrow/tall phone the cover crop is thin enough that skipping this bias pushes
+        // the canopy toward one edge with a bare gap of sky on the other.
+        const biasPx = landingRef.current ? (800 - SCENE_ANCHOR_X) * s : 0;
+        el.style.left = 'calc(50% + ' + biasPx + 'px)';
         el.style.top = '50%';
         el.style.transform = 'translate(-50%, -50%) scale(' + s + ')';
       } else if (window.innerHeight >= window.innerWidth) {

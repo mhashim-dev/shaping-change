@@ -709,10 +709,17 @@ body { -webkit-tap-highlight-color: transparent; }
      engine.regen(42);              // new tree shape (omit arg for random)
      engine.destroy();              // stop the render loop on unmount
 */
+// the trunk's horizontal position in the 1600-wide scene — off-centre (not 800) so the tree
+// clears the right-docked panel on desktop. Exported so the landing screen's full-bleed cover
+// fit (TreeStage.jsx / poc-ui.js) can crop around where the tree actually sits, not raw centre —
+// on a narrow/tall phone the cover crop is thin enough that the gap otherwise shows as a lopsided
+// composition (canopy pushed to one edge, empty sky on the other).
+var SCENE_ANCHOR_X = 690;
+
 function createTreeEngine(canvas) {
   // GROUND sits low so the soil is only a shallow band (~23% of the frame) — the meadow
   // takes the space instead. ROOT_SCALE shrinks the root system to match that band.
-  var W = 1600, H = 900, GROUND = 690, BASEX = 690;
+  var W = 1600, H = 900, GROUND = 690, BASEX = SCENE_ANCHOR_X;
   var ROOT_SCALE = 0.85;
   var TAU = Math.PI * 2;
   var STAGES = 6; // 0 seed, 1 roots, 2 soil, 3 trunk, 4 leaves/impacts, 5 color
@@ -4545,7 +4552,12 @@ function translateNode(node, lang) {
     // whole viewport as a backdrop behind it instead of squeezing into a side strip.
     if (panel.classList.contains('landing')) {
       var sc = Math.max(window.innerWidth / 1600, window.innerHeight / 900);
-      stageEl.style.left = '50%'; stageEl.style.top = '50%';
+      // no side panel to dodge here, so crop around where the tree actually sits
+      // (SCENE_ANCHOR_X, left of the scene's raw 800 centre) rather than raw centre — on a
+      // narrow/tall phone the cover crop is thin enough that skipping this bias pushes the
+      // canopy toward one edge with a bare gap of sky on the other.
+      var biasPx = (800 - SCENE_ANCHOR_X) * sc;
+      stageEl.style.left = 'calc(50% + ' + biasPx + 'px)'; stageEl.style.top = '50%';
       stageEl.style.transform = 'translate(-50%, -50%) scale(' + sc + ')';
       return;
     }

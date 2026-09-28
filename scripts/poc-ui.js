@@ -725,7 +725,12 @@
     // whole viewport as a backdrop behind it instead of squeezing into a side strip.
     if (panel.classList.contains('landing')) {
       var sc = Math.max(window.innerWidth / 1600, window.innerHeight / 900);
-      stageEl.style.left = '50%'; stageEl.style.top = '50%';
+      // no side panel to dodge here, so crop around where the tree actually sits
+      // (SCENE_ANCHOR_X, left of the scene's raw 800 centre) rather than raw centre — on a
+      // narrow/tall phone the cover crop is thin enough that skipping this bias pushes the
+      // canopy toward one edge with a bare gap of sky on the other.
+      var biasPx = (800 - SCENE_ANCHOR_X) * sc;
+      stageEl.style.left = 'calc(50% + ' + biasPx + 'px)'; stageEl.style.top = '50%';
       stageEl.style.transform = 'translate(-50%, -50%) scale(' + sc + ')';
       return;
     }
