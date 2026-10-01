@@ -69,10 +69,13 @@ function panelHTML(id, o) {
     const pills = cur.options.map((opt, i) =>
       '<button type="button" class="pill' + (o.picked === i ? ' sel' : '') + '">' + esc(opt.label) + '</button>').join('');
     const info = (typeof o.picked === 'number') ? cur.options[o.picked].info : ' ';
+    const pickedTag = (typeof o.picked === 'number' && cur.options[o.picked].outcomeTag)
+      ? '<div class="goutcomes"><p class="goutcome">' + esc(cur.options[o.picked].outcomeTag) + '</p></div>' : '';
     h += '<div><h1 class="gq">' + esc(cur.prompt) + '</h1>' +
       '<p class="ghint">' + esc(cur.hint) + '</p>' +
       (cur.drop ? '<p class="gexplore">Drag a card onto the ' + (cur.drop === 'soil' ? 'soil' : 'trunk') + ' — or just tap to choose.</p>' : '') +
       '<div class="gpills">' + pills + '</div>' +
+      pickedTag +
       '<p class="ginfo">' + esc(info) + '</p>' +
       '<div class="panel-foot"><button class="gback" type="button" style="visibility:' + ((o.trailLen || 1) > 1 ? 'visible' : 'hidden') + '">&#8592; Previous step</button>' +
       '<button class="grow" type="button">' + esc(cur.btn) + '</button></div></div>';

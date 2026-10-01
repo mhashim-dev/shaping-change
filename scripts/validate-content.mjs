@@ -140,7 +140,7 @@ if (!SUPPORT_LINE || !/1800\s?RESPECT/i.test(SUPPORT_LINE) || !/\b000\b/.test(SU
 const SHAME = /\b(you (failed|lost|are wrong)|wrong answer|game over|score|points|you scored|shame on)\b/i;
 for (const n of STEPS) {
   const texts = [n.prompt, n.hint, n.tag].filter(Boolean);
-  if (Array.isArray(n.options)) n.options.forEach((o) => { if (o.info) texts.push(o.info); });
+  if (Array.isArray(n.options)) n.options.forEach((o) => { if (o.info) texts.push(o.info); if (o.outcomeTag) texts.push(o.outcomeTag); });
   for (const t of texts) if (SHAME.test(t)) fail(`Shame/score language in ${n.id}: "${t.match(SHAME)[0]}"`);
 }
 

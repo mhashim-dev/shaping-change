@@ -126,6 +126,8 @@ html, body {
   .gpills { gap: 7px; }
   .pill { padding: 10px 14px; font-size: 13.5px; }
   .ginfo { margin-top: 6px; font-size: 12.5px; min-height: 16px; }
+  .goutcomes { margin-top: 5px; }
+  .goutcome { font-size: 11.5px; }
   .panel-foot { margin-top: 10px; }
   .grow { padding: 11px 24px; font-size: 14px; }
   .gcommit { font-size: 14px; padding: 9px 12px; }
@@ -162,6 +164,7 @@ html, body {
   .panel:not(.landing) .ghint { font-size: 13px; margin-bottom: 7px; }
   .panel:not(.landing) .pill { padding: 9px 13px; font-size: 13px; }
   .panel:not(.landing) .ginfo { font-size: 12px; }
+  .panel:not(.landing) .goutcome { font-size: 11px; }
   .panel:not(.landing) .grow { padding: 10px 20px; font-size: 13.5px; }
   .panel:not(.landing) .gsupport { font-size: 12.5px; padding-top: 6px; margin-top: 8px; }
   /* The welcome card also needs to shrink here — otherwise it keeps its desktop size (780px
@@ -254,6 +257,15 @@ html, body {
   color: rgba(240, 198, 106, 0.9);
   margin: 10px 2px 0;
   min-height: 19px;
+}
+/* one short line per selected option on a multi-select screen (06/11/12) — keeps a stack of
+   picks readable without scrolling; the full .ginfo reasoning just below still covers only
+   the most recently picked option. */
+.goutcomes { margin: 8px 2px 0; }
+.goutcome {
+  font: italic 400 12px/1.4 Georgia, 'Times New Roman', serif;
+  color: rgba(240, 198, 106, 0.8);
+  margin: 0 0 2px;
 }
 .glegend {
   display: grid;

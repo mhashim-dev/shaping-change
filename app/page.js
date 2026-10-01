@@ -14,11 +14,10 @@ const EVAL_KEY = 'ppc-eval-v1';     // optional before/after self-rating (local 
 const FACES = ['😟', '🙁', '😐', '🙂', '😃'];
 const BY_ID = STEPS.reduce((m, s) => { m[s.id] = s; return m; }, {});
 // screens where more than one option can genuinely resonate at once (confirmed with PVAW,
-// 28 Sept 2026) — every option here leads to the same next node, so letting a learner pick
-// several removes an artificial single-choice barrier without changing the branching graph.
-// Screen 06 ("behaviour") deliberately stays single-select — its multi-select + colour-coded
-// outcomes are still pending a separate PVAW decision.
-const MULTI_SELECT = new Set(['belief', 'attitude', 'behaviour_good']);
+// 28 Sept 2026; Screen 06 confirmed 1 Oct 2026) — every option here leads to the same next
+// node, so letting a learner pick several removes an artificial single-choice barrier
+// without changing the branching graph.
+const MULTI_SELECT = new Set(['behaviour', 'belief', 'attitude', 'behaviour_good']);
 
 // engine state captured at ENTRY to each visited node — drives back navigation.
 // The story opens on Orion's mature but strained tree (Phase 1), not a seed.
@@ -453,12 +452,15 @@ export default function Home() {
 
   // proceed from a pick screen with everything the learner selected. Single pick: unchanged.
   // Multiple picks (multi-select screens only): every option here leads to the same next node,
-  // so any one of them supplies next/fx — but per PVAW, any healthy pick among them counts the
-  // whole answer as healthy (it's never diluted by also picking a neutral option alongside it).
+  // so any one of them supplies next/fx. Per PVAW: any healthy pick among them counts the whole
+  // answer as healthy (never diluted by also picking a neutral option alongside it); otherwise
+  // (Screen 06's all-harmful options) the penalty caps at the single worst option picked rather
+  // than stacking, so exploring several out of curiosity isn't punished harder than committing
+  // to the single worst one — confirmed by Anu for Screen 06 using the same logic as Screen 11.
   const proceedPick = (opts) => {
     if (opts.length <= 1) { choose(opts[0], picked[0]); return; }
     const healthy = opts.find((o) => o.kind === 'healthy');
-    const rep = healthy || opts[0];
+    const rep = healthy || opts.reduce((worst, o) => ((o.fx?.health ?? 0) < (worst.fx?.health ?? 0) ? o : worst), opts[0]);
     choose({ ...rep, label: opts.map((o) => o.label).join(' & ') }, picked[picked.length - 1]);
   };
 
@@ -726,6 +728,12 @@ export default function Home() {
                 </button>
               ))}
             </div>
+            {picked.length > 0 && (
+              <div className="goutcomes">
+                {picked.map((i) => (view.options[i].outcomeTag
+                  ? <p key={i} className="goutcome">{view.options[i].outcomeTag}</p> : null))}
+              </div>
+            )}
             <p className="ginfo">{picked.length ? view.options[picked[picked.length - 1]].info : ' '}</p>
             <div className="panel-foot">
               <button

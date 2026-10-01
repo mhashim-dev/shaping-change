@@ -12,9 +12,8 @@
   var BY_ID = {};
   STEPS.forEach(function (s) { BY_ID[s.id] = s; });
   // screens where more than one option can genuinely resonate at once (confirmed with PVAW,
-  // 28 Sept 2026) — every option here leads to the same next node. Screen 06 ("behaviour")
-  // deliberately stays single-select — its multi-select is still pending a separate decision.
-  var MULTI_SELECT = { belief: true, attitude: true, behaviour_good: true };
+  // 28 Sept 2026; Screen 06 confirmed 1 Oct 2026) — every option here leads to the same next node.
+  var MULTI_SELECT = { behaviour: true, belief: true, attitude: true, behaviour_good: true };
 
   // opens on Orion's mature but strained tree (Phase 1), not a seed
   var INITIAL_FRAME = { id: 'welcome', stage: 5, health: 68, palette: 'spring', mood: 'noon', density: 1.2, wrongCount: 0 };
@@ -358,13 +357,23 @@
 
   // proceed from a pick screen with everything the learner selected. Single pick: unchanged.
   // Multiple picks (multi-select screens only): every option here leads to the same next node,
-  // so any one supplies next/fx — but per PVAW, any healthy pick among them counts the whole
-  // answer as healthy (never diluted by also picking a neutral option alongside it).
+  // so any one supplies next/fx. Per PVAW: any healthy pick among them counts the whole answer
+  // as healthy (never diluted by also picking a neutral option alongside it); otherwise (Screen
+  // 06's all-harmful options) the penalty caps at the single worst option picked rather than
+  // stacking — confirmed by Anu for Screen 06 using the same logic as Screen 11.
   function proceedPick(opts) {
     if (opts.length <= 1) { choose(opts[0], picked[0]); return; }
     var healthy = null;
     for (var i = 0; i < opts.length; i++) { if (opts[i].kind === 'healthy') { healthy = opts[i]; break; } }
-    var rep = healthy || opts[0];
+    var rep = healthy;
+    if (!rep) {
+      rep = opts[0];
+      for (var j = 1; j < opts.length; j++) {
+        var h = (opts[j].fx && typeof opts[j].fx.health === 'number') ? opts[j].fx.health : 0;
+        var worstH = (rep.fx && typeof rep.fx.health === 'number') ? rep.fx.health : 0;
+        if (h < worstH) rep = opts[j];
+      }
+    }
     var merged = {};
     for (var k in rep) merged[k] = rep[k];
     merged.label = opts.map(function (o) { return o.label; }).join(' & ');
@@ -531,11 +540,15 @@
       }).join('');
       var info = picked.length ? view.options[picked[picked.length - 1]].info : ' ';
       var ready = picked.length > 0;
+      var outcomes = picked.length ? '<div class="goutcomes">' + picked.map(function (i) {
+        return view.options[i].outcomeTag ? '<p class="goutcome">' + esc(view.options[i].outcomeTag) + '</p>' : '';
+      }).join('') + '</div>' : '';
       html += '<div>' +
         '<h1 class="gq">' + esc(view.prompt) + '</h1>' +
         '<p class="ghint">' + esc(view.hint) + '</p>' +
         (current.drop ? '<p class="gexplore">Drag a card onto the ' + (current.drop === 'soil' ? 'soil' : 'trunk') + ' — or just tap to choose.</p>' : '') +
         '<div class="gpills">' + pills + '</div>' +
+        outcomes +
         '<p class="ginfo">' + esc(info) + '</p>' +
         '<div class="panel-foot">' +
           '<button class="gback" data-act="back" type="button" style="visibility:' + (game.trail.length > 2 ? 'visible' : 'hidden') + '">&#8592; ' + esc(uiString('prevStep', lang)) + '</button>' +

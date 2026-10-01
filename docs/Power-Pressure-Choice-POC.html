@@ -134,6 +134,8 @@ html, body {
   .gpills { gap: 7px; }
   .pill { padding: 10px 14px; font-size: 13.5px; }
   .ginfo { margin-top: 6px; font-size: 12.5px; min-height: 16px; }
+  .goutcomes { margin-top: 5px; }
+  .goutcome { font-size: 11.5px; }
   .panel-foot { margin-top: 10px; }
   .grow { padding: 11px 24px; font-size: 14px; }
   .gcommit { font-size: 14px; padding: 9px 12px; }
@@ -170,6 +172,7 @@ html, body {
   .panel:not(.landing) .ghint { font-size: 13px; margin-bottom: 7px; }
   .panel:not(.landing) .pill { padding: 9px 13px; font-size: 13px; }
   .panel:not(.landing) .ginfo { font-size: 12px; }
+  .panel:not(.landing) .goutcome { font-size: 11px; }
   .panel:not(.landing) .grow { padding: 10px 20px; font-size: 13.5px; }
   .panel:not(.landing) .gsupport { font-size: 12.5px; padding-top: 6px; margin-top: 8px; }
   /* The welcome card also needs to shrink here — otherwise it keeps its desktop size (780px
@@ -262,6 +265,15 @@ html, body {
   color: rgba(240, 198, 106, 0.9);
   margin: 10px 2px 0;
   min-height: 19px;
+}
+/* one short line per selected option on a multi-select screen (06/11/12) — keeps a stack of
+   picks readable without scrolling; the full .ginfo reasoning just below still covers only
+   the most recently picked option. */
+.goutcomes { margin: 8px 2px 0; }
+.goutcome {
+  font: italic 400 12px/1.4 Georgia, 'Times New Roman', serif;
+  color: rgba(240, 198, 106, 0.8);
+  margin: 0 0 2px;
 }
 .glegend {
   display: grid;
@@ -3454,9 +3466,9 @@ var STEPS = [
     hint: 'People under stress do not always make healthy choices. Explore the consequences to understand, not judge.',
     btn: 'See what happens',
     options: [
-      { label: 'Take tight control of the money and the decisions', kind: 'harmful', next: 'impact', fx: { mood: 'overcast', shed: 2, health: -18 }, info: 'Orion’s reasoning: he has always been the main decision-maker and believes leading the family is his job as a man. It is the one area of life where he still feels in control, and he believes he knows best how to manage the money.\nBut his family starts to feel unheard — understanding why does not make it okay.' },
-      { label: 'Go quiet and pull away from the family', kind: 'harmful', next: 'impact', fx: { mood: 'overcast', shed: 2, health: -18 }, info: 'Orion’s reasoning: he believes talking about feelings is weak, and he struggles to put his emotions into words or to ask for help. He is frustrated with himself, and tells himself that pulling away protects the family.\nBut the people closest to him feel the cold.' },
-      { label: 'Let the stress come out as anger and blame', kind: 'harmful', next: 'impact', fx: { mood: 'overcast', shed: 3, health: -20 }, info: 'Orion’s reasoning: he is angry with himself and the world around him. Home is the one place he feels able to let his feelings out — and anger is the emotion he knows best.\nBut stress with no safe outlet lands on the family. Naming this is the first step to changing it.' }
+      { label: 'Take tight control of the money and the decisions', kind: 'harmful', next: 'impact', fx: { mood: 'overcast', shed: 2, health: -18 }, info: 'Orion’s reasoning: he has always been the main decision-maker and believes leading the family is his job as a man. It is the one area of life where he still feels in control, and he believes he knows best how to manage the money.\nBut his family starts to feel unheard — understanding why does not make it okay.', outcomeTag: 'Family feels stifled.' },
+      { label: 'Go quiet and pull away from the family', kind: 'harmful', next: 'impact', fx: { mood: 'overcast', shed: 2, health: -18 }, info: 'Orion’s reasoning: he believes talking about feelings is weak, and he struggles to put his emotions into words or to ask for help. He is frustrated with himself, and tells himself that pulling away protects the family.\nBut the people closest to him feel the cold.', outcomeTag: 'Impacts Orion’s own mental health.' },
+      { label: 'Let the stress come out as anger and blame', kind: 'harmful', next: 'impact', fx: { mood: 'overcast', shed: 3, health: -20 }, info: 'Orion’s reasoning: he is angry with himself and the world around him. Home is the one place he feels able to let his feelings out — and anger is the emotion he knows best.\nBut stress with no safe outlet lands on the family. Naming this is the first step to changing it.', outcomeTag: 'The family can be hurt by it.' }
     ]
   },
 
@@ -3512,10 +3524,10 @@ var STEPS = [
     hint: 'The soil feeds the tree. A healthier belief helps everything grow.',
     btn: 'Feed the soil',
     options: [
-      { label: '“Respect is earned through trust, not control — I need to respect my family’s views and really listen too.”', kind: 'healthy', next: 'behaviour_good', fx: { mood: 'noon', health: 18 }, info: 'New belief: strong leaders build trust, not fear.' },
-      { label: '“My worth is more than my job or my authority.”', kind: 'healthy', next: 'behaviour_good', fx: { mood: 'noon', health: 18 }, info: 'New belief: your value is not only your status or your work.' },
-      { label: '“As a father, I want my children to feel safe sharing their feelings with me — not scared.”', kind: 'healthy', next: 'behaviour_good', fx: { mood: 'noon', health: 18 }, info: 'New belief: a safe home is one where everyone can speak freely.' },
-      { label: '“I can stay in charge, as long as I am fair.”', kind: 'neutral', next: 'behaviour_good', fx: { health: -2 }, info: 'Being fair is good. But staying “in charge” alone can still leave others unheard. Sharing power works better.' }
+      { label: '“Respect is earned through trust, not control — I need to respect my family’s views and really listen too.”', kind: 'healthy', next: 'behaviour_good', fx: { mood: 'noon', health: 18 }, info: 'New belief: strong leaders build trust, not fear.', outcomeTag: 'New belief: strong leaders build trust, not fear.' },
+      { label: '“My worth is more than my job or my authority.”', kind: 'healthy', next: 'behaviour_good', fx: { mood: 'noon', health: 18 }, info: 'New belief: your value is not only your status or your work.', outcomeTag: 'You are more than your job or status.' },
+      { label: '“As a father, I want my children to feel safe sharing their feelings with me — not scared.”', kind: 'healthy', next: 'behaviour_good', fx: { mood: 'noon', health: 18 }, info: 'New belief: a safe home is one where everyone can speak freely.', outcomeTag: 'New belief: a safe home is one where everyone can speak freely.' },
+      { label: '“I can stay in charge, as long as I am fair.”', kind: 'neutral', next: 'behaviour_good', fx: { health: -2 }, info: 'Being fair is good. But staying “in charge” alone can still leave others unheard. Sharing power works better.', outcomeTag: 'Controlling others is never a good thing.' }
     ]
   },
 
@@ -3526,9 +3538,9 @@ var STEPS = [
     hint: 'The trunk is what people see. Choose the action Orion takes.',
     btn: 'Grow the trunk',
     options: [
-      { label: 'Make the big decisions together with his wife, while still taking responsibility', kind: 'healthy', next: 'impact_good', fx: { health: 22 }, info: 'Shared power builds safety and trust. Respect is not control.' },
-      { label: 'Ask for help — English classes, job support, counselling', kind: 'healthy', next: 'impact_good', fx: { health: 22 }, info: 'Asking for help is a strength, not a weakness.' },
-      { label: 'Keep control, but try to be kinder about it', kind: 'neutral', next: 'impact_good', fx: { health: -4 }, info: 'Controlling the decisions in the family does not heal the tree even if he is kind.' }
+      { label: 'Make the big decisions together with his wife, while still taking responsibility', kind: 'healthy', next: 'impact_good', fx: { health: 22 }, info: 'Shared power builds safety and trust. Respect is not control.', outcomeTag: 'Shared power builds safety and trust. Controlling someone is not respectful.' },
+      { label: 'Ask for help — English classes, job support, counselling', kind: 'healthy', next: 'impact_good', fx: { health: 22 }, info: 'Asking for help is a strength, not a weakness.', outcomeTag: 'Asking for help is a strength, not a weakness.' },
+      { label: 'Keep control, but try to be kinder about it', kind: 'neutral', next: 'impact_good', fx: { health: -4 }, info: 'Controlling the decisions in the family does not heal the tree even if he is kind.', outcomeTag: 'Controlling decisions is never respectful or safe in a family.' }
     ]
   },
 
@@ -3711,7 +3723,7 @@ var LEGEND = [
 
 // Which node fields hold player-facing text (used by translateNode + the template gen).
 var TRANSLATABLE_FIELDS = ['tag', 'prompt', 'hint', 'btn', 'altBtn'];
-var TRANSLATABLE_OPTION_FIELDS = ['label', 'info'];
+var TRANSLATABLE_OPTION_FIELDS = ['label', 'info', 'outcomeTag'];
 
 // UI chrome strings (everything not coming from a content node).
 var UI_EN = {
@@ -3839,9 +3851,8 @@ function translateNode(node, lang) {
   var BY_ID = {};
   STEPS.forEach(function (s) { BY_ID[s.id] = s; });
   // screens where more than one option can genuinely resonate at once (confirmed with PVAW,
-  // 28 Sept 2026) — every option here leads to the same next node. Screen 06 ("behaviour")
-  // deliberately stays single-select — its multi-select is still pending a separate decision.
-  var MULTI_SELECT = { belief: true, attitude: true, behaviour_good: true };
+  // 28 Sept 2026; Screen 06 confirmed 1 Oct 2026) — every option here leads to the same next node.
+  var MULTI_SELECT = { behaviour: true, belief: true, attitude: true, behaviour_good: true };
 
   // opens on Orion's mature but strained tree (Phase 1), not a seed
   var INITIAL_FRAME = { id: 'welcome', stage: 5, health: 68, palette: 'spring', mood: 'noon', density: 1.2, wrongCount: 0 };
@@ -4185,13 +4196,23 @@ function translateNode(node, lang) {
 
   // proceed from a pick screen with everything the learner selected. Single pick: unchanged.
   // Multiple picks (multi-select screens only): every option here leads to the same next node,
-  // so any one supplies next/fx — but per PVAW, any healthy pick among them counts the whole
-  // answer as healthy (never diluted by also picking a neutral option alongside it).
+  // so any one supplies next/fx. Per PVAW: any healthy pick among them counts the whole answer
+  // as healthy (never diluted by also picking a neutral option alongside it); otherwise (Screen
+  // 06's all-harmful options) the penalty caps at the single worst option picked rather than
+  // stacking — confirmed by Anu for Screen 06 using the same logic as Screen 11.
   function proceedPick(opts) {
     if (opts.length <= 1) { choose(opts[0], picked[0]); return; }
     var healthy = null;
     for (var i = 0; i < opts.length; i++) { if (opts[i].kind === 'healthy') { healthy = opts[i]; break; } }
-    var rep = healthy || opts[0];
+    var rep = healthy;
+    if (!rep) {
+      rep = opts[0];
+      for (var j = 1; j < opts.length; j++) {
+        var h = (opts[j].fx && typeof opts[j].fx.health === 'number') ? opts[j].fx.health : 0;
+        var worstH = (rep.fx && typeof rep.fx.health === 'number') ? rep.fx.health : 0;
+        if (h < worstH) rep = opts[j];
+      }
+    }
     var merged = {};
     for (var k in rep) merged[k] = rep[k];
     merged.label = opts.map(function (o) { return o.label; }).join(' & ');
@@ -4358,11 +4379,15 @@ function translateNode(node, lang) {
       }).join('');
       var info = picked.length ? view.options[picked[picked.length - 1]].info : ' ';
       var ready = picked.length > 0;
+      var outcomes = picked.length ? '<div class="goutcomes">' + picked.map(function (i) {
+        return view.options[i].outcomeTag ? '<p class="goutcome">' + esc(view.options[i].outcomeTag) + '</p>' : '';
+      }).join('') + '</div>' : '';
       html += '<div>' +
         '<h1 class="gq">' + esc(view.prompt) + '</h1>' +
         '<p class="ghint">' + esc(view.hint) + '</p>' +
         (current.drop ? '<p class="gexplore">Drag a card onto the ' + (current.drop === 'soil' ? 'soil' : 'trunk') + ' — or just tap to choose.</p>' : '') +
         '<div class="gpills">' + pills + '</div>' +
+        outcomes +
         '<p class="ginfo">' + esc(info) + '</p>' +
         '<div class="panel-foot">' +
           '<button class="gback" data-act="back" type="button" style="visibility:' + (game.trail.length > 2 ? 'visible' : 'hidden') + '">&#8592; ' + esc(uiString('prevStep', lang)) + '</button>' +
